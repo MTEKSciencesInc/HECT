@@ -13,8 +13,8 @@ psup_plot = function(trial, upper) {
   df$treatment = as.factor(df$treatment)
   df$interim_look = as.integer(df$interim_look)
   p = ggplot(df, aes(x = interim_look, y = p.best, color = treatment)) +
-    geom_line() + geom_hline(yintercept = upper, color = 'darkgrey') +
-    scale_color_brewer(palette = 'Set1') +
+    geom_line(aes(linetype = treatment),size = 1) + geom_hline(yintercept = upper, color = 'darkgrey') +
+    scale_color_manual(values = cbPalette) +
     theme(axis.text=element_text(size=12),
           axis.title=element_text(size=14,face="bold"),
           strip.text.x = element_text(size = 8, face = "bold"))
@@ -102,12 +102,21 @@ data_plot = function(trial) {
   df = data.frame(cbind(y, t(x)%*%treat, 1:length(y)))
   names(df) = c('response', 'treatment', 'patient')
   df$treatment = as.factor(df$treatment)
-  if (all(y %in% c(0,1))) df$response = as.factor(df$response)
-  p = ggplot(df, aes(x = patient, y = response, color = response)) +
-    geom_point(size = 3) + facet_grid(treatment ~ ., labeller = label_both) +
-    theme(axis.text=element_text(size=12),
-          axis.title=element_text(size=14,face="bold"),
-          strip.text.y = element_text(size = 12, face = "bold"))
+  if (all(y %in% c(0,1))) {
+    df$response = as.factor(df$response)
+    p = ggplot(df, aes(x = patient, y = response, color = response)) +
+      geom_point(size = 3) + facet_grid(treatment ~ ., labeller = label_both) +
+      scale_color_manual(values = cbPalette[2:3]) + 
+      theme(axis.text=element_text(size=12),
+            axis.title=element_text(size=14,face="bold"),
+            strip.text.y = element_text(size = 12, face = "bold"))
+  } else {
+    p = ggplot(df, aes(x = patient, y = response, color = response)) +
+      geom_point(size = 3) + facet_grid(treatment ~ ., labeller = label_both) +
+      theme(axis.text=element_text(size=12),
+            axis.title=element_text(size=14,face="bold"),
+            strip.text.y = element_text(size = 12, face = "bold"))
+  }
   return(p)
 }
 
@@ -141,7 +150,7 @@ estPlot = function(trial) {
 #' @return A visual representation of the trial design
 #' @export
 
-trial_design = function(trial) {
+designPlot = function(trial) {
   x = trial$x
   nt = nrow(x)
   nint = ncol(trial$psup) - 1
@@ -159,7 +168,7 @@ trial_design = function(trial) {
     geom_segment(aes(x=start, xend=end, y=arm, yend=arm), size=15, alpha = .75) +
     xlab("Interim look") + geom_text(aes(x = start + nint/10), fontface = "bold", color = 'black') + 
     theme_classic() + 
-    scale_color_brewer(palette="Set2") +
+    scale_color_manual(values = cbPalette) + 
     theme(axis.line.y = element_blank(),
           axis.title.y = element_blank(),
           axis.text.y = element_blank(),
@@ -168,6 +177,42 @@ trial_design = function(trial) {
           axis.title.x=element_text(size=14,face="bold"),
           legend.position="none")
   return(p)
+}
+
+
+#' BRATvsBRCT plot
+#'
+#' @param a0 alpha for BRAT
+#' @param a1 alpha for BRCT
+#' @param p0 power for BRAT
+#' @param p1 power for BRCT
+#' @param c0 cost for BRAT
+#' @param c1 cost for BRCT
+#'
+#' @return Comparison plots
+#' @export
+
+BRATvsBRCTPlot = function(a0, a1, p0, p1, c0, c1) {
+  df = data.frame(alpha = c(a0, a1), power = c(p0, p1), cost = c(c0, c1), design = c('BRAT', 'BRCT'))
+  p1 = ggplot(df, aes(fill=design, x=design, y = alpha)) + geom_bar(stat = 'identity', alpha = .75) +
+    theme_classic() + 
+    scale_fill_manual(values=cbPalette) +
+    theme(axis.text=element_text(size=12),
+          axis.title=element_text(size=14,face="bold"),
+          legend.position="none")
+  p2 = ggplot(df, aes(fill=design, x=design, y = power)) + geom_bar(stat = 'identity', alpha = .75) +
+    theme_classic() + 
+    scale_fill_manual(values=cbPalette[3:4]) +
+    theme(axis.text=element_text(size=12),
+          axis.title=element_text(size=14,face="bold"),
+          legend.position="none")
+  p3 = ggplot(df, aes(fill=design, x=design, y = cost)) + geom_bar(stat = 'identity', alpha = .75) +
+    theme_classic() + 
+    scale_fill_manual(values=cbPalette[5:6]) +
+    theme(axis.text=element_text(size=12),
+          axis.title=element_text(size=14,face="bold"),
+          legend.position="none")
+  return(grid.arrange(p1, p2, p3, nrow = 1, ncol = 3))
 }
   
 
