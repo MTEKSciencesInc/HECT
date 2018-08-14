@@ -17,6 +17,11 @@ if (difftime(t_now, t0, units = 'days') > 1) {
   save(t0, file = 'Time/time_last')
 }
 
+# The palette with grey:
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+# The palette with black:
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
 shinyServer(function(input, output, session) {
 
   # volumes <- c(Home = '~')
