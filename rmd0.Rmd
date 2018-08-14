@@ -1,0 +1,141 @@
+---
+title: "Bayesian Response Adaptive Trial Simulator - BRATS"
+author: |
+  | Shirin Golchi 
+  | MTEK Sciences Inc.
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Summary
+
+BRATS is an application designed to explore the various features and utilities of Bayesian Response Adaptive Randomized (BRAR) trial designs. For a given set of design components, specified by the user, data can be generated for a single BRAR trial with an embedded Bayesian analysis. Single trial simulation provides a better understanding of the progression of the trial with the adaptive component under different scenarios. In addition, under the `Trial design properties` tab, performing simulatin studies is enhanced to investigate statistical properties including power and type I error rate. BRATS is designed as accessible as possible to non-statisticians such that an intuitive understanding of the adaptive design is enough to use the application for clinical trial planning. However, a detailed description of the underlying assumptions and statistical models is provided in the following.
+
+
+### Sample Size Calculation
+In the `Sample Size Calculation` tab, per-arm and total sample sizes can be calculated for a conventional multi-arm RCT. The goal is to obtain the required sample size to estimate the difference between the largest and second largest of the effects for a given statistical power, type I error rate and drop-out rate. The rational is that in a multi-arm trial, the trial needs to be powered to detect the smallest difference between the largest of the effects and the rest.
+
+If continuous response type is selected, variances need to be provided. The sample size (per arm) is then given by 
+$$n_a = \left\lceil\frac{(\sigma^2_1 + \sigma^2_2)(Z_{1-\alpha/2}+Z_{1-\beta})^2}{\delta^2(1-r)} \right\rceil $$
+where $\delta$ is the difference between the largest effect size and the second largest effect size; $\sigma^2_1$ and $\sigma^2_2$ are the corresponding variances; $\alpha$ is the type I error rate and $\beta$ is $(1-\text{power})$; and $r$ is the dropout rate. 
+
+If proportion response type is selected, the sample size (per arm) is given by 
+$$n_a = \left\lceil\frac{(p_1(1-p_1) + p_2(1-p_2))(Z_{1-\alpha/2}+Z_{1-\beta})^2}{(p_1 - p_2)^2(1-r)} \right\rceil $$
+where $p_1$ and $p_2$ are the probabilities of success for the best and second best treatments.
+
+The total sample size is simply calculated by multiplying the per-arm sample size by the number of trial arms.
+
+### Trial Simulation
+
+#### Bayesian response adaptive randomized design
+
+BRAR are flexible trial designs that allow for adjustments to arm assignment ratios based on the intermediate results. Early termination of the trial or stopping an arm is allowed if there is "sufficient evidence" in the collected data that a treatment is outperforming the rest or is futile, respectively. In both cases, "sufficient evidence" is defined during trial planning. The probability that a treatment effect is larger than all the other treatment effects given the observed data is often used as a measure of evidence for superiority or inferiority -- if this probability (or a function of it) crosses a pre-specified upper threshold for any of the treatment arms the trial is terminated; and if it crosses a prespecified lower threshold for any of the treatments the corresponding arm is stopped, i.e. no more patients will be assigned to it. In case that all the treatments compete closely and none of the treatments is superior with probability greater than the specified upper threshold, the trial is terminated when a maximum sample size is reached. This maximum sample size is specified by the user as the maximum affordable sample size given the trial budget or based on an equivalent multi-arm conventional randomized clinical trial (RCT) with user-specified statistical properties. The `Sample Size Calculation` tab can be used for the latter.
+
+For more on Response adaptive randomized designs and Bayesian adaptive trials see @RRABook and @BerryBook.
+
+#### Data generative model
+Consider a trial with $L$ arms. For every patient, $n$, enrolled into the trial, let $\mathbf{x}_n$ be a vector of size $L$ whose $l^\text{th}$ component is 1 if treatment $l$ is assigned to patient $n$ and zero, otherwise. The outcome for patient $n$ is denoted by $y_n$ and the effect size of treatment $l$ is denoted by $\theta_l$. The vector of effect sizes, $\boldsymbol{\theta}$ is of size $L$. 
+
+If response type is selected as continuous, the effect types are also considered continuous and a normal model is used to generate data,
+$$y_n \sim \mathcal{N}(\mathbf{x}_n^T\boldsymbol{\theta},1),$$
+where $\mathbf{x}_n^T$ is the transpose of arm assignment vector.
+
+If response type is selected as proportion, i.e., the individual outcomes are binary, the effect types are considered as the population proportion and are in the $(0,1)$ interval. A binomial model is used to generate the data in this case,
+$$y_n \sim \mathcal{B}(1, \mathbf{x}_n^T\boldsymbol{\theta}).$$
+
+The arm assignment vector, $\mathbf{x}_{n}$, is generated from the following multinomial distribution,
+$$\mathbf{x}_n \sim \mathcal{M}(1, \boldsymbol{\rho} = (\rho_1, \ldots, \rho_L)),$$
+where $\rho_l$ is the probability of assigning a patient to arm $l$. At the beginning of the trial and up until the $n_0^\text{th}$ patient, where $n_0$ is the burn-in sample size, patients are assigned to treatment arms using a balanced randomization scheme. That is, 
+$$\rho_1 = \ldots = \rho_L = \frac{1}{L}.$$
+After the burn-in period, however, the arm assignment probabilities are adjusted according to the posterior probability that each arm is outperforming the rest given the cumulating data, i.e., the arm assignment probability for patient $n+1$ is specified as,
+$$\rho_l=\sqrt{P\left(\theta_l= \max(\theta_1, \ldots, \theta_L) \mid \mathbf{x}_{1:n}, y_{1:n}\right)},$$
+where $\mathbf{x}_{1:n}$ and $y_{1:n}$ are the "observed" assignment vectors and outcomes of the first $n$ patients enrolled in the trial. In the next section, we explain how $P\left(\theta_l= \max(\theta_1, \ldots, \theta_L) \mid \mathbf{x}_{1:n}, y_{1:n}\right)$ is estimated.
+
+To incorporate the adherence rate into the data generating process, if the $l^{\text{th}}$ component of $\mathbf{x}_n$ is 1, it is set to zero with probability $\lambda_l$, where $\lambda_l$ is the adherence rate for arm $l$. Note that adherence is considered "unobservable", i.e., it is incorporated into the data generative model but not in the analysis model explained below.
+
+#### Analysis model -- Bayesian updates
+The interim Bayesian updates required for adaptation, are performed as follows:
+
+For continuous $\theta_l$, a diffuse normal prior is used,
+$$\theta_l \sim \mathcal{N}(0,10).$$
+The posterior can then be updated analytically; suppose that the posterior distribution of $\theta_l$ given the first $n_1$ patient data is,
+$$\theta_l \mid \mathbf{x}_{1:n_1}, y_{1:n_1}\sim \mathcal{N}(\mu_1, \sigma_1^2).$$
+The updated posterior according to $n_2$ new patients with assignment vectors $\mathbf{x}_{n_1:n_2}$ and outcomes $y_{n_1:n_2}$, is given by
+$$\theta_l \mid \mathbf{x}_{1:(n_1+n_2)}, y_{1:(n_1+n_2)}\sim \mathcal{N}(\mu_2, \sigma_2^2),$$
+where 
+$$\sigma^2_2 = \frac{1}{n_2 + \frac{1}{\sigma_1^2}};$$
+and 
+$$\mu_2 = \sigma_2^2 \left(\frac{\mu_1}{\sigma^2_1}+n_2\bar{y}_{n_1:n_2,l}\right),$$
+where $\bar{y}_{n_1:n_2,l}$ is the mean response for patients who were assigned to arm $l$ among the new $n_2$ patients.
+
+For rate type $\theta_l$,
+$$\theta_l \sim Beta(1,1).$$
+The posterior is obtained as follows; suppose that the posterior distribution of $\theta_l$ given the first $n_1$ patient data is,
+$$\theta_l \mid \mathbf{x}_{1:n_1}, y_{1:n_1}\sim Beta(a_1, b_1).$$
+The updated posterior according to $n_2$ new patients with assignment vectors $\mathbf{x}_{n_1:n_2}$ and outcomes $y_{n_1:n_2}$, is given by
+$$\theta_l \mid \mathbf{x}_{1:(n_1+n_2)}, y_{1:(n_1+n_2)}\sim Beta(a_1 + y_{n_1:n_2,l}, b_1 + n_2 - y_{n_1:n_2,l}),$$
+where $y_{n_1:n_2,l}$ is the number of successes in arm $l$ among the new $n_2$ patients.
+
+The posterior probability of an arm being superior after $n$ patients are enrolled in the trial is then given as the expectation of $\mathbf{1}(\theta_l= \max(\theta_1, \ldots, \theta_L))$ with respect to the posterior $\pi(\theta_l \mid \mathbf{x}_{1:n}, y_{1:n})$,
+$$P\left(\theta_l= \max(\theta_1, \ldots, \theta_L) \mid \mathbf{x}_{1:n}, y_{1:n}\right) = \int \mathbf{1}(\theta_l= \max(\theta_1, \ldots, \theta_L))\pi(\theta_l \mid \mathbf{x}_{1:n}, y_{1:n})d\theta_l,$$
+where $\mathbf{1}(\theta_l= \max(\theta_1, \ldots, \theta_L))$ is an indicator function that takes the value of 1 if $\theta_l= \max(\theta_1, \ldots, \theta_L)$ and is zero, otherwise. The probability of superiority is estimated using Monte Carlo. That is, for $N$ samples generated from $\pi(\theta_l \mid \mathbf{x}_{1:n}, y_{1:n})$ for $l = 1, \ldots, L$ the probabilities of superiority are estimated as
+$$\hat{P}\left(\theta_l= \max(\theta_1, \ldots, \theta_L) \mid \mathbf{x}_{1:n}, y_{1:n}\right) = \sum_{i = 1}^N \mathbf{1}(\theta_{l,i}= \max(\theta_{1,i}, \ldots, \theta_{L,i})).$$
+**Secondary outcome:** Addition of a secondary outcome is made possible in the trial simulator to allow monitoring the treatment effects on two outcomes in one trial. Note, however, that adaptations are performed only with respect to the primary outcome data. 
+
+#### Trial design properties
+In the `Trial design properties` tab, the properties of the study design such as power, type I error rate and the distribution of the "sample size at trial termination" may be studied. The trial with a set of user-specified settings is simulated mutiple times where the number of simulations is also specified by the user in the `power` tab.
+
+**Power:** Statistical power for a given Bayesian response adaptive design is defined as the probability that the superior treatment is concluded superior given the data. Since the superiority conclusion is made if probability of superiority crosses the prespecified upper threshold, statistical power is defined as,
+$$P\left(P\left(\theta_{max}= \max(\theta_1, \ldots, \theta_L) \mid \mathbf{x}_{1:n_T}, y_{1:n_T}\right)>U \mid \boldsymbol{\theta}, \text{design} \right).$$
+Power is estimated as the proportion of times that the superior treatment is concluded superior in $M$ simulated trials given a set of effect sizes and design components,
+$$\hat{P}\left(P\left(\theta_{\max}= \max(\theta_1, \ldots, \theta_L) \right)>U\right) = \frac{1}{M}\sum_{m = 1}^{M}\mathbf{1}\left(\hat{P}_m\left(\theta_{\max}= \max(\theta_1, \ldots, \theta_L)\right)>U\right),$$
+where the subscript $m$ shows that the estimate was obtained from the data simulated in trial $m= 1, \ldots, M$.
+
+**Sample size distribution:** The sample size at trial termination is an important criterion for adaptive designs. The distribution of the sample size at trial termination has the following relationship with the power: if the statistical power is high the trial is often concluded early and the sample size distribution has a mode around the burn-in sample size; if power is low, the trial more often reaches the maximum sample size without concluding and the sample size takes its mode at the maximum allowed sample size. A criterion that may be of interest is the expected saved sample size, which is the expected difference between the maximuam allowed sample size and the sample size at trial termination,
+$$\hat{E}(SS) = \sum_{m = 1}^M(n_{\max} - n_T^m).$$
+**Type I error rate:** Type I error rate is defined as the probability of concluding that one of the treatments is superior under the assumption that none of the treatments are effective. Type I error rate is estimated as,
+$$\hat{P}\left(\exists l\hskip5pt \text{s.t.}\hskip5pt P\left(\theta_{l}= \max(\theta_1, \ldots, \theta_L) \right)>U \mid \theta_l = 0\hskip5pt \forall l\right) = \frac{1}{M}\sum_{m = 1}^{M}\mathbf{1}\left(\exists l\hskip5pt \text{s.t.}\hskip5pt P\left(\theta_{l}= \max(\theta_1, \ldots, \theta_L) \right)>U \mid \theta_l = 0\hskip5pt \forall l\right).$$  
+
+####Acknowledgements
+The development of this application was funded by the Bill & Melinda Gates Foundation.
+
+#####References
+<script type="text/x-mathjax-config">
+   MathJax.Hub.Config({  "HTML-CSS": { minScaleAdjust: 125, availableFonts: [] }  });
+</script>
+
+
+---
+references:
+- id: RRABook
+  title: Randomized Response Adaptive Designs in Clinical Trials
+  author:
+  - family: Atkinson
+    given: Anthony C.
+  - family: Biswas
+    given: Atanu
+  publisher: CRC Press
+  type: Book
+  issued:
+    year: 2014
+    
+- id: BerryBook
+  title: Bayesian Adaptive Methods for Clinical Trials
+  author:
+  - family: Berry
+    given: Scott M.
+  - family: Carlin
+    given: Bradley P.
+  - family: Lee
+    given: J. Jack
+  - family: Muller
+    given: Peter
+  publisher: CRC Press
+  type: Book
+  issued:
+    year: 2010
+---
+
