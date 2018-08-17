@@ -598,8 +598,12 @@ sim_wrapper = function(i, nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.95
   pow = sum(pbin[which.max(theta0)] == 1)
   alpha = sum(sum(pbin) == 1)
   out = list(power = pow, alpha = alpha, N_terminate = length(y))
+  
+  incProgress(1)#, detail = paste("Finished simulation", i))
+  
+  
   return(out)
-}
+} # END sim_wrapper
 
 #' RAR simulator simulator
 #'
@@ -611,11 +615,17 @@ sim_wrapper = function(i, nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.95
 power_compute = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.95, lower = .05,
                          burn = 10*nt, response.type, conjugate_prior = T, padhere = c(.95,.95,.95),
                          adapt = T, con = T, addarmlater = rep(0, nt), M = 100) {
+  
+  
+  
+  # withProgress(message = 'Calculating power', value = 0, {
+
   df = data.frame(t(sapply(1:M, sim_wrapper, nt = nt, theta0 = theta0, nb = nb, maxN = maxN,
                            N = N, upper = upper, lower = lower, burn = burn,
                            response.type = response.type,
                            conjugate_prior = conjugate_prior, padhere = padhere, adapt = adapt, con = con,
                            addarmlater = addarmlater, simplify = T)))
+  
   out = list(power = mean(unlist(df$power)), Nt = as.numeric(df$N_terminate))
   return(out)
 }
@@ -782,6 +792,9 @@ sim_wrapper_RCT = function(i, nt, theta0, maxN = 500, N = 1000, upper = 0.95,
   pow = sum(pbin[which.max(theta0)] == 1)
   alpha = sum(sum(pbin) == 1)
   out = list(power = pow, alpha = alpha)
+  
+  #incProgress(1, detail = paste("Finished simulation", i))
+  
   return(out)
 }
 
