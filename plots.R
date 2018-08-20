@@ -11,10 +11,11 @@ psup_plot = function(trial, upper) {
   df = melt(psup)
   names(df) = c('treatment', 'interim_look', 'p.best')
   df$treatment = as.factor(df$treatment)
-  df$interim_look = as.integer(df$interim_look)
+  df$interim_look = as.integer(df$interim_look) - 1
   p = ggplot(df, aes(x = interim_look, y = p.best, color = treatment)) +
     geom_line(aes(linetype = treatment),size = 1) + geom_hline(yintercept = upper, color = 'darkgrey') +
     scale_color_manual(values = cbPalette) +
+    ylab('probability of superiority') + xlab('interim look') +
     theme(axis.text=element_text(size=12),
           axis.title=element_text(size=14,face="bold"),
           strip.text.x = element_text(size = 8, face = "bold"))

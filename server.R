@@ -120,7 +120,10 @@ shinyServer(function(input, output, session) {
   })
 
   alpha_calc = eventReactive(input$button01, {
-    withTimeout({alpha_compute(nt = input$nt, nb = input$batchsize , maxN = input$max, N = 1000,
+    eff0 = paste('eff', 1:input$nt, sep = '')
+    eff = c()
+    for (i in 1:input$nt) eff[i] = as.numeric(input[[eff0[i]]])
+    withTimeout({alpha_compute(nt = input$nt, theta0 = eff, nb = input$batchsize , maxN = input$max, N = 1000,
                   upper = input$upthresh, lower = input$lowthresh, burn = input$burnin,
                   response.type = 'absolute', conjugate_prior = T, padhere = rep(1, input$nt), 
                   adapt = input$adapt, con = input$con, M = input$Malpha)}, 
@@ -141,7 +144,10 @@ shinyServer(function(input, output, session) {
   })
   
   alpha_calc_RCT = eventReactive(input$compRCT, {
-    withTimeout({alpha_compute_RCT(nt = input$nt, maxN = input$max, N = 1000,
+    eff0 = paste('eff', 1:input$nt, sep = '')
+    eff = c()
+    for (i in 1:input$nt) eff[i] = as.numeric(input[[eff0[i]]])
+    withTimeout({alpha_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
                                upper = input$upthresh, 
                                response.type = input$efftype, conjugate_prior = T, M = input$Malpha)}, timeout = ifelse(!is.null(input$Talpha), input$Talpha, 1000000), onTimeout = 'silent')
   })

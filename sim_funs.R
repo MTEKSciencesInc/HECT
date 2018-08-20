@@ -325,6 +325,39 @@ sup_check = function(theta) {
   return(check)
 }
 
+#' futility check
+#'
+#' This function is used to estimate the probability of futility of each treatment arm compare to control
+#'
+#' @param theta matrix of posterior samples for effect sizes, columns: arms, rows: samples
+#' @param MID minimally important difference
+#' @return vector of probabilities of superiority
+#'
+#' @export
+
+con_fut_check = function(theta, MID) {
+  n = length(theta)
+  check = c()
+  for (i in 2:n) check = c(check, (theta[i] - theta[1])<MID)
+  return(check)
+}
+
+#' Superiority to control check
+#'
+#' This function estimates the probability of seperiority for each treatment arm from a posterior sample of effect sizes
+#'
+#' @param theta matrix of posterior samples for effect sizes, columns: arms, rows: samples
+#' @return vector of probabilities of superiority
+#'
+#' @export
+
+con_sup_check = function(theta) {
+  n = length(theta)
+  check = c()
+  for (i in 2:n) check = c(check, theta[i] > theta[1])
+  return(check)
+}
+
 #' RAR simulator
 #'
 #' This function simulates a RAR trial
@@ -342,20 +375,27 @@ sup_check = function(theta) {
 #' @param response.type response type, either 'rate', 'count' or 'absolute'
 #' @param conjugate_prior logical argument, default is True
 #' @param padhere vector of adherence rates for each treatment
+#' @param compCon logical, compare all arms with control (first arm)
+#' @param adapt logical, adapt randomization probabilities, used only when \code{compCon = F}
+#' @param platf logical, use a platform design, i.e., add the last arm only when at least one arm is dropped
+#' @param MID minimally important difference for futility test of paiwise comparisons with control; used only when \code{compCon = T}
 #' @return updated posterior samples
 #'
 #' @export
 
-RAR_sim = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, lower = .05,
-                   burn = 10*nt, response.type, conjugate_prior = T, padhere = rep(0.95,nt), adapt = T,
-                   con = T, addarmlater = rep(0, nt), updateProgress) {
+RAR_sim = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppfut = 0.95, lower = .05,
+                   burn = 10*nt, response.type, conjugate_prior = T, padhere = rep(1,nt), adapt = T,
+                   platf = T, compCon = F, MID = 0) {
   ng = nb
+  addarmlater = rep(0, nt)
+  if (platf == T) addarmlater[nt] = Inf
   j = 0
   x = array(0, dim = c(nt, 1))
   x0 = array(0, dim = c(nt, 1))
   y = NULL
   theta = array(rnorm(N*nt, 0, 10), dim = c(N, nt, 1))
   check = array(0, dim = c(N, nt))
+  fcheck = array(0, dim = c(N, nt))
   if (conjugate_prior != T | response.type == "absolute") post0 = cbind(rep(0, nt), rep(10, nt))
   if (conjugate_prior == T & response.type == "rate") {
     post0 = cbind(rep(1, nt), rep(1, nt))
@@ -376,28 +416,11 @@ RAR_sim = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, lowe
   fut.stop = NULL
   repeat {
     j = j + 1
-    if (is.function(updateProgress)) {
-      text <- paste0("updating results based on batch/patient:", j)
-      updateProgress(detail = text)
-    }
-    if (con == T) np = sum(psup[2:nt,j]>0) else np = sum(psup[,j]>0)
-    if (adapt == T & length(y) > burn) {
-      prand = sqrt(psup[,j])
-      if (con == T) {
-        prand[1] = 1/np
-        #prand[-1] = ((nt - 1)/nt)*prand[-1]
-      }
-    } else {
-      ze = which(psup[,j] == 0)
-      prand = rep(1/np, nt)
-      prand[ze] = 0
-    }
-    if (j>1 & sum(addarmlater == (j-1))>0) {
-      np = sum(psup[,j]>0) 
-      prand[which(addarmlater == (j-1))] = 1/np
-      prand[-which(addarmlater == (j-1))] = ((np - 1)/np)*prand[-which(addarmlater == (j-1))]
-    }
-    prand[which(addarmlater>(j-1))] = 0
+    # if (is.function(updateProgress)) {
+    #   text <- paste0("updating results based on batch/patient:", j)
+    #   updateProgress(detail = text)
+    # }
+    
     xb = rmultinom(nb, 1, prob = prand)
     xb0 = xb
     for (k in 1:nb) {
@@ -440,20 +463,74 @@ RAR_sim = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, lowe
     }
     #theta_new[,which(addarmlater>j)] = -Inf
     theta = abind(theta, theta_new, along = 3)
-    check[,which(prand>0)] = t(apply(theta[,which(prand>0),j+1], 1, sup_check))
-    check[,which(prand==0)] = 0
-    psup_out = abind(psup_out, apply(check, 2, mean), along = 2)
-    psup_out[which(addarmlater>(j-1)), j+1] = 0
-    if (length(y) < burn) {
-      psup = abind(psup, psup[,j], along = 2)
-    } else psup = abind(psup, apply(check, 2, mean), along = 2)
-    ll = NULL
-    if (length(which(psup[,j+1] < lower))>0) ll = which(psup[,j+1] < lower)
-    if (!is.null(ll)) {
-      fut.stop = c(fut.stop, ll[addarmlater[ll]<j])
+    
+    if (compCon == F) {
+      check[,which(prand>0)] = t(apply(theta[,which(prand>0),j+1], 1, sup_check))
+      check[,which(prand==0)] = 0
+      psup_out = abind(psup_out, apply(check, 2, mean), along = 2)
+      psup_out[which(addarmlater>j), j+1] = 0
+      if (length(y) < burn) {
+        psup = abind(psup, psup[,j], along = 2)
+      } else psup = abind(psup, apply(check, 2, mean), along = 2)
+      ll = NULL
+      if (length(which(psup[,j+1] < lower))>0) ll = which(psup[,j+1] < lower)
+      if (!is.null(ll)) {
+        fut.stop = c(fut.stop, ll[addarmlater[ll]<j])
+      }
+      if (!is.null(fut.stop)) {
+        psup[fut.stop,j+1] = 0
+        if (platf == T) addarmlater[nt] = j
+      }
+      ntj = length(which(addarmlater<=j & psup[,j+1]>0)) 
+      if (sum(addarmlater==j)>0) ntj = ntj + sum(addarmlater==j)
+      if (adapt == T & length(y)>=burn)  {
+        prand = rep(0, nt)
+        prand[which(addarmlater<=j & psup[,j+1]>0)] = ((ntj - 1)/ntj)*sqrt(psup[which(addarmlater<=j & psup[,j+1]>0),j+1])
+        prand[which(addarmlater==j)] = 1/ntj
+      } else {
+        prand = rep(0, nt)
+        prand[which(addarmlater<=j & psup[,j+1]>0)] = 1/ntj
+        prand[which(addarmlater==j)] = 1/ntj
+      }
+      
+      
+    } else {
+      mat = apply(theta[,which(prand>0),j+1], 1, con_sup_check)
+      if (is.null(dim(mat))) mat = matrix(mat, N, length(which(prand>0)) - 1) else mat = t(mat)
+      check[,which(prand>0)] = cbind(rep(0, N), mat)
+      check[,which(prand==0)] = 0
+      psup_out = abind(psup_out, apply(check, 2, mean), along = 2)
+      psup_out[which(addarmlater>j), j+1] = 0
+      if (length(y) < burn) {
+        psup = abind(psup, psup[,j], along = 2)
+      } else psup = abind(psup, apply(check, 2, mean), along = 2)
+      fmat = apply(theta[,which(prand>0),j+1], 1, con_fut_check, MID = MID)
+      if (is.null(dim(fmat))) fmat = matrix(fmat, N, length(which(prand>0)) - 1) else fmat = t(fmat)
+      fcheck[,which(prand>0)] = cbind(rep(0, N), fmat)
+      fcheck[,which(prand==0)] = 0
+      pfut = apply(fcheck, 2, mean)
+      pfut[which(addarmlater>j)] = 0
+      ff = NULL
+      if (length(which(pfut > uppfut))>0) ff = which(pfut > uppfut)
+      if (!is.null(ff)) {
+        fut.stop = c(fut.stop, ff[addarmlater[ff]<j])
+        
+      }
+      if (!is.null(fut.stop)) {
+        psup[fut.stop,j+1] = 0
+        if (platf == T) addarmlater[nt] = j
+      }
+      psup_out[,1] = c(0,rep(1/(nt0-1), (nt - 1)))
+      psup_out[which(addarmlater>0),1] = 0
+      ntj = length(which(addarmlater<=j & psup[,j+1]>0)) + 1
+      if (sum(addarmlater==j)>0) ntj = ntj + sum(addarmlater==j)
+      prand = rep(0, nt)
+      prand[which(addarmlater<=j & psup[,j+1]>0)]  = 1
+      prand[1] = 1
+      prand[which(addarmlater==j)] = 1
     }
-    if (!is.null(fut.stop)) psup[fut.stop,j+1] = 0
-    if (sum(psup[,j+1]>0) == 1  | max(psup[,j+1]) > upper | length(y) >= maxN) break
+    
+    if (sum(prand>0) <= 1  | max(psup[,j+1]) > upper | length(y) >= maxN) break
   }
   if (conjugate_prior == T) {
     if (response.type == 'absolute') {
@@ -488,16 +565,19 @@ RAR_sim = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, lowe
 #'
 #' @export
 
-sim_wrapper = function(i, nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.95, lower = .05,
-                       burn = 10*nt, response.type, conjugate_prior = T, padhere = rep(.95,nt), 
-                       adapt = T, con = T, addarmlater = rep(0, nt)) {
+sim_wrapper = function(i, nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppfut = 0.95, lower = .05,
+                       burn = 10*nt, response.type, conjugate_prior = T, padhere = rep(0.95,nt), adapt = T,
+                       platf = T, compCon = F, MID = 0) {
   ng = nb
+  addarmlater = rep(0, nt)
+  if (platf == T) addarmlater[nt] = Inf
   j = 0
   x = array(0, dim = c(nt, 1))
   x0 = array(0, dim = c(nt, 1))
   y = NULL
   theta = array(rnorm(N*nt, 0, 10), dim = c(N, nt, 1))
   check = array(0, dim = c(N, nt))
+  fcheck = array(0, dim = c(N, nt))
   if (conjugate_prior != T | response.type == "absolute") post0 = cbind(rep(0, nt), rep(10, nt))
   if (conjugate_prior == T & response.type == "rate") {
     post0 = cbind(rep(1, nt), rep(1, nt))
@@ -518,24 +598,11 @@ sim_wrapper = function(i, nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.95
   fut.stop = NULL
   repeat {
     j = j + 1
-    if (con == T) np = sum(psup[2:nt,j]>0) else np = sum(psup[,j]>0)
-    if (adapt == T & length(y) > burn) {
-      prand = sqrt(psup[,j])
-      if (con == T) {
-        prand[1] = 1/np
-        #prand[-1] = ((nt - 1)/nt)*prand[-1]
-      }
-    } else {
-      ze = which(psup[,j] == 0)
-      prand = rep(1/np, nt)
-      prand[ze] = 0
-    }
-    if (j>1 & sum(addarmlater == (j-1))>0) {
-      np = sum(psup[,j]>0) 
-      prand[which(addarmlater == (j-1))] = 1/np
-      prand[-which(addarmlater == (j-1))] = ((np - 1)/np)*prand[-which(addarmlater == (j-1))]
-    }
-    prand[which(addarmlater>(j-1))] = 0
+    # if (is.function(updateProgress)) {
+    #   text <- paste0("updating results based on batch/patient:", j)
+    #   updateProgress(detail = text)
+    # }
+    
     xb = rmultinom(nb, 1, prob = prand)
     xb0 = xb
     for (k in 1:nb) {
@@ -578,26 +645,100 @@ sim_wrapper = function(i, nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.95
     }
     #theta_new[,which(addarmlater>j)] = -Inf
     theta = abind(theta, theta_new, along = 3)
-    check[,which(prand>0)] = t(apply(theta[,which(prand>0),j+1], 1, sup_check))
-    check[,which(prand==0)] = 0
-    psup_out = abind(psup_out, apply(check, 2, mean), along = 2)
-    psup_out[which(addarmlater>(j-1)), j+1] = 0
-    if (length(y) < burn) {
-      psup = abind(psup, psup[,j], along = 2)
-    } else psup = abind(psup, apply(check, 2, mean), along = 2)
-    ll = NULL
-    if (length(which(psup[,j+1] < lower))>0) ll = which(psup[,j+1] < lower)
-    if (!is.null(ll)) {
-      fut.stop = c(fut.stop, ll[addarmlater[ll]<j])
+    
+    if (compCon == F) {
+      check[,which(prand>0)] = t(apply(theta[,which(prand>0),j+1], 1, sup_check))
+      check[,which(prand==0)] = 0
+      psup_out = abind(psup_out, apply(check, 2, mean), along = 2)
+      psup_out[which(addarmlater>j), j+1] = 0
+      if (length(y) < burn) {
+        psup = abind(psup, psup[,j], along = 2)
+      } else psup = abind(psup, apply(check, 2, mean), along = 2)
+      ll = NULL
+      if (length(which(psup[,j+1] < lower))>0) ll = which(psup[,j+1] < lower)
+      if (!is.null(ll)) {
+        fut.stop = c(fut.stop, ll[addarmlater[ll]<j])
+      }
+      if (!is.null(fut.stop)) {
+        psup[fut.stop,j+1] = 0
+        if (platf == T) addarmlater[nt] = j
+      }
+      ntj = length(which(addarmlater<=j & psup[,j+1]>0)) 
+      if (sum(addarmlater==j)>0) ntj = ntj + sum(addarmlater==j)
+      if (adapt == T & length(y)>=burn)  {
+        prand = rep(0, nt)
+        prand[which(addarmlater<=j & psup[,j+1]>0)] = ((ntj - 1)/ntj)*sqrt(psup[which(addarmlater<=j & psup[,j+1]>0),j+1])
+        prand[which(addarmlater==j)] = 1/ntj
+      } else {
+        prand = rep(0, nt)
+        prand[which(addarmlater<=j & psup[,j+1]>0)] = 1/ntj
+        prand[which(addarmlater==j)] = 1/ntj
+      }
+      
+      
+    } else {
+      mat = apply(theta[,which(prand>0),j+1], 1, con_sup_check)
+      if (is.null(dim(mat))) mat = matrix(mat, N, length(which(prand>0)) - 1) else mat = t(mat)
+      check[,which(prand>0)] = cbind(rep(0, N), mat)
+      check[,which(prand==0)] = 0
+      psup_out = abind(psup_out, apply(check, 2, mean), along = 2)
+      psup_out[which(addarmlater>j), j+1] = 0
+      if (length(y) < burn) {
+        psup = abind(psup, psup[,j], along = 2)
+      } else psup = abind(psup, apply(check, 2, mean), along = 2)
+      fmat = apply(theta[,which(prand>0),j+1], 1, con_fut_check, MID = MID)
+      if (is.null(dim(fmat))) fmat = matrix(fmat, N, length(which(prand>0)) - 1) else fmat = t(fmat)
+      fcheck[,which(prand>0)] = cbind(rep(0, N), fmat)
+      fcheck[,which(prand==0)] = 0
+      pfut = apply(fcheck, 2, mean)
+      pfut[which(addarmlater>j)] = 0
+      ff = NULL
+      if (length(which(pfut > uppfut))>0) ff = which(pfut > uppfut)
+      if (!is.null(ff)) {
+        fut.stop = c(fut.stop, ff[addarmlater[ff]<j])
+        
+      }
+      if (!is.null(fut.stop)) {
+        psup[fut.stop,j+1] = 0
+        if (platf == T) addarmlater[nt] = j
+      }
+      psup_out[,1] = c(0,rep(1/(nt0-1), (nt - 1)))
+      psup_out[which(addarmlater>0),1] = 0
+      ntj = length(which(addarmlater<=j & psup[,j+1]>0)) + 1
+      if (sum(addarmlater==j)>0) ntj = ntj + sum(addarmlater==j)
+      prand = rep(0, nt)
+      prand[which(addarmlater<=j & psup[,j+1]>0)]  = 1
+      prand[1] = 1
+      prand[which(addarmlater==j)] = 1
     }
-    if (!is.null(fut.stop)) psup[fut.stop,j+1] = 0
-    if (sum(psup[,j+1]>0) == 1  | max(psup[,j+1]) > upper | length(y) >= maxN) break
+    
+    if (sum(prand>0) <= 1  | max(psup[,j+1]) > upper | length(y) >= maxN) break
   }
   psup_last = psup[,j+1]
   pbin = ifelse(psup_last > upper, 1, 0)
-  pow = sum(pbin[which.max(theta0)] == 1)
+  pow0 = sum(pbin[which.max(theta0)] == 1)
   alpha = sum(sum(pbin) == 1)
-  out = list(power = pow, alpha = alpha, N_terminate = length(y))
+  pow = pbin[-1]
+  out = list(power0 = pow0, power = pow, alpha = alpha, N_terminate = length(y))
+  return(out)
+}
+
+
+#' RAR simulator simulator
+#'
+#' This function simulates multiple RAR trials to calculate power and type I error rate
+#' @inheritParams RAR_sim
+#' @return estimated power and type I error rate
+#'
+#' @export
+power_compute = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppfut = 0.95, lower = .05,
+                         burn = 10*nt, response.type, conjugate_prior = T, padhere = rep(0.95,nt), adapt = T,
+                         platf = T, compCon = F, MID = 0, M = 100) {
+  df = data.frame(t(sapply(1:M, sim_wrapper, nt, theta0, nb = nb, maxN = maxN, N = N, upper = upper, uppfut = uppfut, lower = lower,
+                           burn = burn, response.type, conjugate_prior = conjugate_prior, padhere = padhere, adapt = adapt,
+                           platf = platf, compCon = compCon, MID = MID, simplify = T)))
+  if (compCon == T) power = apply(do.call(rbind, df$power), 2, mean) else power = mean(unlist(df$power0))
+  out = list(power = power, Nt = as.numeric(df$N_terminate))
   return(out)
 }
 
@@ -608,37 +749,16 @@ sim_wrapper = function(i, nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.95
 #' @return estimated power and type I error rate
 #'
 #' @export
-power_compute = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.95, lower = .05,
-                         burn = 10*nt, response.type, conjugate_prior = T, padhere = c(.95,.95,.95),
-                         adapt = T, con = T, addarmlater = rep(0, nt), M = 100) {
-  df = data.frame(t(sapply(1:M, sim_wrapper, nt = nt, theta0 = theta0, nb = nb, maxN = maxN,
-                           N = N, upper = upper, lower = lower, burn = burn,
-                           response.type = response.type,
-                           conjugate_prior = conjugate_prior, padhere = padhere, adapt = adapt, con = con,
-                           addarmlater = addarmlater, simplify = T)))
-  out = list(power = mean(unlist(df$power)), Nt = as.numeric(df$N_terminate))
-  return(out)
-}
-
-#' RAR simulator simulator
-#'
-#' This function simulates multiple RAR trials to calculate power and type I error rate
-#' @inheritParams RAR_sim
-#' @return estimated power and type I error rate
-#'
-#' @export
-alpha_compute = function(nt, nb = 1, maxN = 500, N = 1000, upper = 0.95, lower = .05,
-                         burn = 10*nt, response.type, conjugate_prior = T, padhere = padhere, 
-                         adapt = T, con = T, addarmlater = rep(0, nt), M = 100) {
+alpha_compute = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppfut = 0.95, lower = .05,
+                         burn = 10*nt, response.type, conjugate_prior = T, padhere = rep(0.95,nt), adapt = T,
+                         platf = T, compCon = F, MID = 0, M = 100) {
   if (response.type == 'absolute' | response.type == 'count') theta0 = rep(0, nt)
-  if (response.type == 'rate') theta0 = rep(0.5, nt)
-  df = data.frame(t(sapply(1:M, sim_wrapper, nt = nt, theta0 = theta0, nb = nb, maxN = maxN,
-                                             N = N, upper = upper, lower = lower, burn = burn,
-                                             response.type = response.type,
-                                             conjugate_prior = conjugate_prior,
-                           padhere = padhere, adapt = adapt, con = con,
-                           addarmlater = addarmlater, simplify = T)))
-  out = list(alpha = mean(unlist(df$alpha)))
+  if (response.type == 'rate') theta0 = rep(mean(theta0), nt)
+  df = data.frame(t(sapply(1:M, sim_wrapper, nt, theta0, nb = nb, maxN = maxN, N = N, upper = upper, uppfut = uppfut, lower = lower,
+                           burn = burn, response.type, conjugate_prior = conjugate_prior, padhere = padhere, adapt = adapt,
+                           platf = platf, compCon = compCon, MID = MID, simplify = T)))
+  if (compCon == T) alpha = apply(do.call(rbind, df$power), 2, mean) else alpha = mean(unlist(df$alpha))
+  out = list(alpha = alpha)
   return(out)
 }
 
@@ -808,10 +928,10 @@ power_compute_RCT = function(nt, theta0, maxN = 500, N = 1000, upper = 0.95, res
 #' @return estimated type I error rate
 #'
 #' @export
-alpha_compute_RCT = function(nt, maxN = 500, N = 1000, upper = 0.95, response.type, 
+alpha_compute_RCT = function(nt, theta0, maxN = 500, N = 1000, upper = 0.95, response.type, 
                              conjugate_prior = T, M = 500) {
   if (response.type == 'absolute' | response.type == 'count') theta0 = rep(0, nt)
-  if (response.type == 'rate') theta0 = rep(0.5, nt)
+  if (response.type == 'rate') theta0 = rep(mean(theta0), nt)
   df = data.frame(t(sapply(1:M, sim_wrapper_RCT, nt = nt, theta0 = theta0, maxN = maxN,
                            N = N, upper = upper, response.type = response.type,
                            conjugate_prior = conjugate_prior, simplify = T)))
