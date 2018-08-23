@@ -24,31 +24,28 @@ shinyUI(fluidPage(#theme="bootstrap.css",
              sidebarLayout(
                sidebarPanel(
                  
-                 div(style="display: inline-block;vertical-align:top; ", numericInput("nt", "Number of treatments:",
-                                                                                      value = 3)),
-                 div(style="", radioButtons("efftype", "Primary outcome type", c('Continuous' = "absolute",
-                                                                                 #"OR" = "OR",
-                                                                                 "Proportion (between 0 and 1)" = "rate"),#, "Count (greater than 0)" = "count"),
+                 div(style="display: inline-block;vertical-align:top; ", 
+                     numericInput("nt", "Number of treatments:", value = 3)),
+                 div(style="", radioButtons("efftype", "Primary outcome type", 
+                                            c('Continuous' = "absolute",
+                                              "Proportion (between 0 and 1)" = "rate"),
                                             selected = "absolute")),
-                 #checkboxInput("con", "First arm is control", value = TRUE),
                  
                  div(style="display: inline-block;vertical-align:top; ", uiOutput("effboxes")),
                  
-                 
-                 
-                 #div(style="display: inline-block;vertical-align:top; ", uiOutput("ai")),
                  div(style="", uiOutput("adhere")),
-                 
                  
                  checkboxInput("so", "Add secondary outcome"),
                  conditionalPanel(
                    condition = "input.so == true",
-                   radioButtons("efftypeso", "Secondary outcome type", c('Continuous' = "absolute",
-                                                                         #"OR" = "OR",
-                                                                         "Proportion (between 0 and 1)" = "rate"),#, "Count (greater than 0)" = "count"),
+                   radioButtons("efftypeso", "Secondary outcome type", 
+                                c('Continuous' = "absolute",
+                                  #"OR" = "OR",
+                                  "Proportion (between 0 and 1)" = "rate"),
                                 selected = "absolute"),
                    div(style="display: inline-block;vertical-align:top; ", uiOutput("effboxesso"))
                  ),
+                 
                  checkboxInput("platf", "Platform design", value = FALSE),
                  bsTooltip("platf", "When this box is checked the trial starts without the last arm. The last arm is added when at least one arm is dropped.",
                            "right", options = list(container = "body")),
@@ -114,11 +111,12 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                  div(style="display: inline-block;",numericInput("ec", "Enrollment cost per patient ($):",
                                                                  value = 0))
                ),
+               
                mainPanel(
                  
                  
-                 tabsetPanel(
-                   tabPanel(#"Compute trial design properties",
+                 tabsetPanel( 
+                   tabPanel(# START 1st row tabs
                      
                      div(style="display:inline-block; text-align: middle; width:280px",
                          fluidRow(align = "middle",
@@ -142,101 +140,93 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                            
                          )
                          
-                         ),
+                     )),  # END 1st row tabs
                      
-                     # div(style="display:inline-block; margin-left:25px; margin-right:25px;",
-                     #     actionButton("button2", "Compute trial design properties", style="vertical-align: middle; padding:4px; font-size:100%")),
-
-                            # actionButton("button0", "Compute power", style="padding:4px; font-size:100%"),
-                            # actionButton("button01", "Compute type I error rate", style="padding:4px; font-size:100%"),
-                            
-                            tabsetPanel(
-                              tabPanel("Power",
-                                       
-                                       checkboxInput("tlimit", "Set a limit for run time"),
-                                       conditionalPanel(
-                                         condition = "input.tlimit == true",
-                                         numericInput("Tpower", "Maximum permitted run time in seconds", value = NULL),
-                                         bsTooltip("Tpower", "The simulation is terminated if run time exceeds this limit.",
-                                                   "right", options = list(container = "body"))),
-                                       
-                                       
-                                       #actionButton("button0", "Compute"),
-                                       DT::dataTableOutput("power")
-                                       ),
-                              tabPanel("Sample size distribution/cost evaluation", plotOutput("ssdist"), DT::dataTableOutput("sssummary"),
-                                       htmlOutput('sssave'), plotOutput("cdist"), DT::dataTableOutput("csummary"),
-                                       htmlOutput('csave')),
-                              tabPanel("Type I error rate",
-                                       
-                                       # wellPanel(tags$div(tags$em(
-                                       #   HTML(paste(tags$span(style="color:darkred", "Note: Changing the effect sizes and adherence rates does not affect the type I error rate as it is computed under the null hypothesis (i.e., none of the treatments are effective).")))
-                                       # ))),
-                                       # numericInput("Malpha", "Number of simulations", value = 100),
-                                       # bsTooltip("Malpha", "Number of Monte Carlo simulations to estimate the type I error rate.",
-                                       #           "right", options = list(container = "body")),
-                                       # checkboxInput("tlimita", "Set a limit for run time"),
-                                       # conditionalPanel(
-                                       #   condition = "input.tlimita == true",
-                                       #   numericInput("Talpha", "Maximum permitted run time in seconds", value = NULL),
-                                       #   bsTooltip("Talpha", "The simulation is terminated if run time exceeds this limit.",
-                                       #             "right", options = list(container = "body"))),
-                                       
-                                       #actionButton("button01", "Compute"),
-                                       DT::dataTableOutput("alpha")
-                                       ),
-                              tabPanel("Saved simulation configurations and results",
-                                       
-                                       actionButton("submit", "Save recent results"),
-                                       bsTooltip("submit", "This button saves results to the application shared data folder. To see the most recent results in the table, reload after saving. The application data folder is cleared on a daily basis and can be modified by other users. To save the table contents to your machine use the download button below.",
-                                                 "right", options = list(container = "body")),
-                                       actionButton("load", "Load saved results"),
-                                       bsTooltip("load", "Load simulation results from the application shared data folder.",
-                                                 "right", options = list(container = "body")),
-                                       selectInput('column', 'Columns', choices = names0, selected = names0[c(1,13:18, 22, 26)],
-                                                   multiple = T),
-                                       actionButton("deleteRows", "Delete rows"), DT::dataTableOutput('responses'), tabPanel("Files list", DT::dataTableOutput("tbl")),
-                                       downloadButton("downloadData", "Download"),
-                                       bsTooltip("downloadData", "Use this button to download simulation data.",
-                                                 "right", options = list(container = "body")),
-                                       actionButton("clearData", "Clear data"),
-                                       bsTooltip("clearData", "By clicking this button all the data in the application shared data folder is cleared.",
-                                                 "right", options = list(container = "body"))
-                                       #tags$div(tags$label("Upload", class="btn btn-primary",
-                                       #                    tags$input(id = "fileIn", webkitdirectory = TRUE, type = "file", style="display: none;", onchange="pressed()")))
-                                       #, shinyDirButton('directory', 'Folder select', 'Please select a folder')
-                              )
-                              
-                              
-                            )),
-
-                                    
-                   tabPanel(#"comparison with RCT",
+                     tabsetPanel( # START 2nd row tabs
+                       tabPanel("Power",
+                                
+                                checkboxInput("tlimit", "Set a limit for run time"),
+                                conditionalPanel(
+                                  condition = "input.tlimit == true",
+                                  numericInput("Tpower", "Maximum permitted run time in seconds", value = NULL),
+                                  bsTooltip("Tpower", "The simulation is terminated if run time exceeds this limit.",
+                                            "right", options = list(container = "body"))),
+                                
+                                DT::dataTableOutput("power")
+                       ),
+                       tabPanel("Sample size distribution/cost evaluation", 
+                                plotOutput("ssdist"), DT::dataTableOutput("sssummary"),
+                                htmlOutput('sssave'), plotOutput("cdist"), DT::dataTableOutput("csummary"),
+                                htmlOutput('csave')),
+                       tabPanel("Type I error rate",
+                                
+                                # wellPanel(tags$div(tags$em(
+                                #   HTML(paste(tags$span(style="color:darkred", "Note: Changing the effect sizes and adherence rates does not affect the type I error rate as it is computed under the null hypothesis (i.e., none of the treatments are effective).")))
+                                # ))),
+                                # numericInput("Malpha", "Number of simulations", value = 100),
+                                # bsTooltip("Malpha", "Number of Monte Carlo simulations to estimate the type I error rate.",
+                                #           "right", options = list(container = "body")),
+                                # checkboxInput("tlimita", "Set a limit for run time"),
+                                # conditionalPanel(
+                                #   condition = "input.tlimita == true",
+                                #   numericInput("Talpha", "Maximum permitted run time in seconds", value = NULL),
+                                #   bsTooltip("Talpha", "The simulation is terminated if run time exceeds this limit.",
+                                #             "right", options = list(container = "body"))),
+                                
+                                #actionButton("button01", "Compute"),
+                                DT::dataTableOutput("alpha")
+                       ),
+                       tabPanel("Saved simulation configurations and results",
+                                br(),
+                                actionButton("submit", "Save recent results"),
+                                bsTooltip("submit", "This button saves results to the application shared data folder. To see the most recent results in the table, reload after saving. The application data folder is cleared on a daily basis and can be modified by other users. To save the table contents to your machine use the download button below.",
+                                          "right", options = list(container = "body")),
+                                actionButton("load", "Load saved results"),
+                                bsTooltip("load", "Load simulation results from the application shared data folder.",
+                                          "right", options = list(container = "body")),
+                                br(),
+                                br(),
+                                selectInput('column', 'Columns', choices = names0, 
+                                            selected = names0[c(1,13:18, 22, 26)],
+                                            multiple = T),
+                                actionButton("deleteRows", "Delete rows"), 
+                                DT::dataTableOutput('responses'), 
+                                tabPanel("Files list", DT::dataTableOutput("tbl")),
+                                downloadButton("downloadData", "Download"),
+                                bsTooltip("downloadData", "Use this button to download simulation data.",
+                                          "right", options = list(container = "body")),
+                                actionButton("clearData", "Clear data"),
+                                bsTooltip("clearData", "By clicking this button all the data in the application shared data folder is cleared.",
+                                          "right", options = list(container = "body"))
+                                #tags$div(tags$label("Upload", class="btn btn-primary",
+                                #                    tags$input(id = "fileIn", webkitdirectory = TRUE, type = "file", style="display: none;", onchange="pressed()")))
+                                #, shinyDirButton('directory', 'Folder select', 'Please select a folder')
+                       ),
+                       tabPanel("Comparison with RCT",
+                                br(),
+                                div(actionButton("compRCT", "Run", 
+                                                 style="padding:4px; font-size:100%;
+                                                 color:#FFF; background-color: #0095ff; border-color:#07c")),
+                                
+                                plotOutput("BRATvsBRCTplot"),
+                                br()
+                                #,
+                                #DT::dataTableOutput('RCT')
+                       )
+                       
+                     ) # END 2nd row tabs
                      
-                     div(style="display:inline-block; text-align: middle",
-                         "Comparison with RCT \n",
-                         div(actionButton("compRCT", "Run", 
-                                          style="position:relative;left: 37%; padding:4px; font-size:100%;
-                                          margin-bottom:19px;
-                                          color:#FFF; background-color: #0095ff; border-color:#07c"))
-                     ),
-                     
-                     # div(style="display:inline-block; margin-left:25px; margin-right:25px;",
-                     #     actionButton("compRCT", "Generate comparison with RCT", style="vertical-align: middle; padding:4px; font-size:100%")),
-                     
-
-                     plotOutput("BRATvsBRCTplot"),
-                     br()
-                     #,
-                     #DT::dataTableOutput('RCT')
-                     )
-                 ),
+                   ), # END top panel 
+                
+                 ##############################################################################
+                 # Single trial simulation ####################################################
+                 ##############################################################################
                  
-                 br(),
-                 br(),
-                 
-                 tabsetPanel(
-                   tabPanel(#"Single trial simulation",
+                   br(),
+                   br(),
+                   
+                   tabsetPanel(
+                   tabPanel(
                      
                      div(style="display:inline-block; text-align: middle",
                          "Single trial simulation \n",
