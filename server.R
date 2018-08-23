@@ -43,6 +43,14 @@ shinyServer(function(input, output, session) {
     )
   })
 
+  # Workaround for hover box not showing up properly for superiority bar given diffrerent options
+  upthreshold <- eventReactive(input$compCon, {
+    if (input$compCon == "TRUE") {
+      return(input$upthreshT)
+    } else {
+      return(input$upthreshF)
+    }
+  })
 
   dataInput = eventReactive(input$button, {
     if(isValid_num0() | input$efftype == 'absolute'){
@@ -81,7 +89,7 @@ shinyServer(function(input, output, session) {
       if (is.null(input$adapt)) adp = F else adp = input$adapt
       if (is.null(input$MID)) mid = 0 else mid = input$MID
       RAR_sim(nt = input$nt, theta0 = eff, nb = input$batchsize, maxN = input$max, N = 1000,
-              upper = input$upthresh, uppfut = input$uppfut, lower = input$lowthresh,
+              upper = upthreshold, uppfut = input$uppfut, lower = input$lowthresh,
               burn = input$burnin, response.type = input$efftype, conjugate_prior = T, padhere = adh, adapt = adp,
               platf = input$platf, compCon = input$compCon, MID = mid)
     } else {
@@ -121,13 +129,13 @@ shinyServer(function(input, output, session) {
     withProgress(message = 'Estimating power and type I error', value = 0, max = 2*input$M, {
     
     power_out <- withTimeout({power_compute(nt = input$nt, theta0 = eff, nb = input$batchsize, maxN = input$max, N = 1000,
-                               upper = input$upthresh, uppfut = input$uppfut, lower = input$lowthresh,
+                               upper = upthreshold, uppfut = input$uppfut, lower = input$lowthresh,
                                burn = input$burnin, response.type = input$efftype, conjugate_prior = T, padhere = adh, adapt = adp,
                                platf = input$platf, compCon = input$compCon, MID = mid, M = input$M)},
                 timeout = ifelse(!is.null(input$Tpower), input$Tpower, Inf), onTimeout = 'silent')
     
     alpha_out <- withTimeout({alpha_compute(nt = input$nt, theta0 = eff, nb = input$batchsize, maxN = input$max, N = 1000,
-                                            upper = input$upthresh, uppfut = input$uppfut, lower = input$lowthresh,
+                                            upper = upthreshold, uppfut = input$uppfut, lower = input$lowthresh,
                                             burn = input$burnin, response.type = input$efftype, conjugate_prior = T, padhere = adh, adapt = adp,
                                             platf = input$platf, compCon = input$compCon, MID = mid,
                                M = input$M)},
@@ -185,7 +193,7 @@ shinyServer(function(input, output, session) {
     
     #withProgress(message = 'Calculating power', value = 0, {
     withTimeout({power_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
-                               upper = input$upthresh,
+                               upper = upthreshold,
                                response.type = input$efftype, conjugate_prior = T,
                                padhere = adh , compCon = input$compCon, M = input$M)}, 
                 timeout = ifelse(!is.null(input$Tpower), input$Tpower, Inf), onTimeout = 'silent')
@@ -196,7 +204,7 @@ shinyServer(function(input, output, session) {
   
   alpha_calc_RCT = eventReactive(input$compRCT, {
     withTimeout({alpha_compute_RCT(nt = input$nt, maxN = input$max, N = 1000,
-                               upper = input$upthresh, 
+                               upper = upthreshold, 
                                response.type = input$efftype, conjugate_prior = T, compCon = input$compCon, 
                                M = input$M)}, 
                 timeout = ifelse(!is.null(input$Tpower), input$Tpower, 1000000), onTimeout = 'silent')
@@ -447,7 +455,7 @@ shinyServer(function(input, output, session) {
 
   output$supPlot <- renderPlot({
     trial = dataInput()
-    psup_plot(trial, input$upthresh)
+    psup_plot(trial, upthreshold)
   })
   
   output$designPlot <- renderPlot({

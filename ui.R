@@ -52,43 +52,52 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                  checkboxInput("platf", "Platform design", value = FALSE),
                  bsTooltip("platf", "When this box is checked the trial starts without the last arm. The last arm is added when at least one arm is dropped.",
                            "right", options = list(container = "body")),
+                 
                  radioButtons("compCon", "Comparison:",
-                              c("Compare all arms simultaneously" = 'FALSE',
+                              choices = c("Compare all arms simultaneously" = 'FALSE',
                                 "Compare arms against reference treatment" = 'TRUE')),
+                 
                  conditionalPanel(
                    condition = "input.compCon == 'TRUE'",
-                   div(style="display: inline-block;vertical-align:top; ", numericInput("MID", "Minimum important difference (MID):",
-                                                                                        value = 0)),
+                   div(style="display: inline-block;vertical-align:top; ",
+                       numericInput("MID", "Minimum important difference (MID):",
+                                    value = 0)),
                    div(style="",sliderInput("uppfut", "Futility probability threshold:", step = .005,
                                             min = 0, max = 1, value = 0.95)),
                    bsTooltip("uppfut", "If the probability that a treatment effect being smaller than MID, for any of the treatment arms, falls below this threshold, the arm will be stopped (i.e. no more patients are assined to it) .",
                              "right", options = list(container = "body")),
-                   div(style="",sliderInput("upthresh",
+                   
+                   div(style="",sliderInput("upthreshT",
                                             "Superiority probability threshold:", step = .005,
                                             min = 0,
                                             max = 1,
                                             value = 0.975)),
-                   bsTooltip("upthresh", "If the probability that a treatments is better than the reference exceeds this threshold, at any point after burn-in and before the maximum sample size is reached, the trial will be terminated.",
+                   bsTooltip("upthreshT", "If the probability that a treatment is better than the reference exceeds this threshold, at any point after burn-in and before the maximum sample size is reached, the trial will be terminated.",
                              "right", options = list(container = "body"))
                  ),
-                 conditionalPanel(
+                 
+                 conditionalPanel( # "Compare all arms simultaneously" = 'FALSE'
                    condition = "input.compCon == 'FALSE'",
                    checkboxInput("adapt", "Employ response-adaptive randomization", value = TRUE),
                    bsTooltip("adapt", "Based on patient responses accrued, allocate more patients to the better treatment(s).",
                              "right", options = list(container = "body")),
+                   
                    div(style="",sliderInput("lowthresh", "Stop arm for futility at:", step = .005,
                                             min = 0, max = 1, value = 0.01)),
                    bsTooltip("lowthresh", "If the probability that a treatment is better than the rest, for any of the treatment arms, falls below this threshold, the arm will be stopped (i.e. no more patients are assined to it) .",
                              "right", options = list(container = "body")),
-                   div(style="",sliderInput("upthresh",
+                   
+                   div(style="",sliderInput("upthreshF",
                                             "Terminate trial for superiority at:", step = .005,
                                             min = 0,
                                             max = 1,
                                             value = 0.975)),
-                   bsTooltip("upthresh", "If the probability that a treatments is better than the rest exceeds this threshold, at any point after burn-in and before the maximum sample size is reached, the trial will be terminated.",
+                   bsTooltip("upthreshF", "If the probability that a treatment is better than the rest exceeds this threshold, at any point after burn-in and before the maximum sample size is reached, the trial will be terminated.",
                              "right", options = list(container = "body"))
                  
                  ),
+                 
+                 
                  
                  div(style="display: inline-block;",numericInput("burnin", "Burn-in sample size:",
                                                                  value = 30)),
