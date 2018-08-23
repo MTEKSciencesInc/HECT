@@ -1,3 +1,4 @@
+
 library(abind)
 library(dplyr)
 library(ggplot2)
@@ -76,14 +77,13 @@ shinyServer(function(input, output, session) {
       }
       adh0 = paste('adh', 1:input$nt, sep = '')
       adh = c()
-      aal = rep(0, input$nt)
-      if (!is.null(input$ail)) aal[input$nt] = input$ail
       for (i in 1:input$nt) adh[i] = as.numeric(input[[adh0[i]]])
+      if (is.null(input$adapt)) adp = F else adp = input$adapt
+      if (is.null(input$MID)) mid = 0 else mid = input$MID
       RAR_sim(nt = input$nt, theta0 = eff, nb = input$batchsize, maxN = input$max, N = 1000,
-              upper = input$upthresh, lower = input$lowthresh, burn = input$burnin,
-              response.type = input$efftype, conjugate_prior = T, padhere = adh, adapt = input$adapt,
-              con = input$con, 
-              addarmlater = aal, updateProgress)
+              upper = input$upthresh, uppfut = input$uppfut, lower = input$lowthresh,
+              burn = input$burnin, response.type = input$efftype, conjugate_prior = T, padhere = adh, adapt = adp,
+              platf = input$platf, compCon = input$compCon, MID = mid)
     } else {
       createAlert(session, "alert0", "Alert0", title = "Invalid Entry",
                   content = "Proportions must be between 0 and 1.", append = FALSE)
@@ -116,22 +116,22 @@ shinyServer(function(input, output, session) {
     eff0 = paste('eff', 1:input$nt, sep = '')
     eff = c()
     for (i in 1:input$nt) eff[i] = as.numeric(input[[eff0[i]]])
+    if (is.null(input$adapt)) adp = F else adp = input$adapt
+    if (is.null(input$MID)) mid = 0 else mid = input$MID
+    withProgress(message = 'Estimating power and type I error', value = 0, max = 2*input$M, {
     
-    withProgress(message = 'Estimating power and type I error', value = 0, max = input$M +input$Malpha, {
-    
-    power_out <- withTimeout({power_compute(nt = input$nt, theta0 = eff, nb = input$batchsize , maxN = input$max, N = 1000,
-                               upper = input$upthresh, lower = input$lowthresh, burn = input$burnin,
-                               response.type = input$efftype, conjugate_prior = T,
-                               padhere = adh , adapt = input$adapt, con = input$con, M = input$M)},
+    power_out <- withTimeout({power_compute(nt = input$nt, theta0 = eff, nb = input$batchsize, maxN = input$max, N = 1000,
+                               upper = input$upthresh, uppfut = input$uppfut, lower = input$lowthresh,
+                               burn = input$burnin, response.type = input$efftype, conjugate_prior = T, padhere = adh, adapt = adp,
+                               platf = input$platf, compCon = input$compCon, MID = mid, M = input$M)},
                 timeout = ifelse(!is.null(input$Tpower), input$Tpower, Inf), onTimeout = 'silent')
     
-    alpha_out <- withTimeout({alpha_compute(nt = input$nt, nb = input$batchsize , maxN = input$max, N = 1000,
-                               upper = input$upthresh, lower = input$lowthresh, burn = input$burnin,
-                               response.type = 'absolute', conjugate_prior = T, padhere = rep(1, input$nt),
-                               adapt = input$adapt,
-                               con = input$con,
-                               M = input$Malpha)},
-                timeout = ifelse(!is.null(input$Talpha), input$Talpha, 1000000), onTimeout = 'silent')
+    alpha_out <- withTimeout({alpha_compute(nt = input$nt, theta0 = eff, nb = input$batchsize, maxN = input$max, N = 1000,
+                                            upper = input$upthresh, uppfut = input$uppfut, lower = input$lowthresh,
+                                            burn = input$burnin, response.type = input$efftype, conjugate_prior = T, padhere = adh, adapt = adp,
+                                            platf = input$platf, compCon = input$compCon, MID = mid,
+                               M = input$M)},
+                timeout = ifelse(!is.null(input$Tpower), input$Tpower, 1000000), onTimeout = 'silent')
     
     }) # END withProgress    
     
@@ -187,7 +187,7 @@ shinyServer(function(input, output, session) {
     withTimeout({power_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
                                upper = input$upthresh,
                                response.type = input$efftype, conjugate_prior = T,
-                               padhere = adh , M = input$M)}, 
+                               padhere = adh , compCon = input$compCon, M = input$M)}, 
                 timeout = ifelse(!is.null(input$Tpower), input$Tpower, Inf), onTimeout = 'silent')
     #}) # END withProgress
 
@@ -197,7 +197,9 @@ shinyServer(function(input, output, session) {
   alpha_calc_RCT = eventReactive(input$compRCT, {
     withTimeout({alpha_compute_RCT(nt = input$nt, maxN = input$max, N = 1000,
                                upper = input$upthresh, 
-                               response.type = input$efftype, conjugate_prior = T, M = input$Malpha)}, timeout = ifelse(!is.null(input$Talpha), input$Talpha, 1000000), onTimeout = 'silent')
+                               response.type = input$efftype, conjugate_prior = T, compCon = input$compCon, 
+                               M = input$M)}, 
+                timeout = ifelse(!is.null(input$Tpower), input$Tpower, 1000000), onTimeout = 'silent')
   })
 
 
@@ -347,13 +349,13 @@ shinyServer(function(input, output, session) {
   # })
   
   
-  observeEvent(input[[paste("aal", 2, sep = '')]], {
-    insertUI(
-      selector = "#aal",
-      where = "afterEnd",
-      ui = numericInput('ai', 'at interim', value = 1)
-    )
-  })
+  # observeEvent(input[[paste("aal", 2, sep = '')]], {
+  #   insertUI(
+  #     selector = "#aal",
+  #     where = "afterEnd",
+  #     ui = numericInput('ai', 'at interim', value = 1)
+  #   )
+  # })
 
   output$effboxesso <- renderUI({
     numT <- as.integer(input$nt)
@@ -515,41 +517,100 @@ shinyServer(function(input, output, session) {
       } else return()
     }
   })
-
-  output$power <- renderUI({
-    # if(isValid_num0() | (input$efftype == 'absolute' & isValid_na0())){
-    #   closeAlert(session, 'Alert0')
-    #
-    # } else {
-    #   createAlert(session, "alert0", "Alert0", title = "Invalid Entry",
-    #               content = "Proportions must be between 0 and 1.", append = FALSE)
-    # }
+  
+  
+  output$power <- DT::renderDataTable({
     power_alpha0 <- power_alpha_calc()
     p0 = power_alpha0$power_out #power_calc()
-    if (is.null(p0)) {
-      HTML(paste('<br/>'), paste("<pre>","<font color=\"#FF0000\"><b>",'Power calculation terminated: run time exceeded the maximum permitted time by user.', "</b></font>"))
-    } else {
-      if (round(p0$power, 2) >= 0.8) {
-        HTML(paste('<br/>'), paste("<pre>",'Estimated power:', "<font color=\"#1b7c45\"><b>",round(p0$power, 2), "</b></font>"))
+    
+    if (!is.null(p0)) {
+      pow0 = c()
+      for (i in 1:length(p0$power)) {
+        if (p0$power[i]>=0.8) 
+          pow0[i] = paste("<font color=\"#1b7c45\"><b>",round(p0$power[i], 2), "</b></font>") else
+            pow0[i] = paste("<font color=\"#FF0000\"><b>",round(p0$power[i], 2), "</b></font>")
       }
-      else HTML(paste('<br/>'), paste("<pre>",'Estimated power:', "<font color=\"#FF0000\"><b>",round(p0$power, 2), "</b></font>"))
+      d0 = t(data.frame(power = pow0))
+      if (input$compCon == T) {
+        colnames(d0) = paste('Treatment', 2:input$nt)
+        row.names(d0) = "<b>Power</b>"
+        datatable(d0, rownames = T, escape = FALSE,
+                  caption = paste('Power to detect the effect of all treatments against the reference treatment:'))
+      } else {
+        colnames(d0) = paste(' ')
+        row.names(d0) = "<b>Power</b>"
+        datatable(d0, rownames = T, escape = FALSE,
+                  caption = paste('Power to detect the superior treatment:'))
+      }
+      
     }
-
+    
   })
-
-  output$alpha <- renderUI({
+  
+  # 
+  # 
+  # 
+  # output$power <- renderUI({
+  #   # if(isValid_num0() | (input$efftype == 'absolute' & isValid_na0())){
+  #   #   closeAlert(session, 'Alert0')
+  #   #
+  #   # } else {
+  #   #   createAlert(session, "alert0", "Alert0", title = "Invalid Entry",
+  #   #               content = "Proportions must be between 0 and 1.", append = FALSE)
+  #   # }
+  #   power_alpha0 <- power_alpha_calc()
+  #   p0 = power_alpha0$power_out #power_calc()
+  #   if (is.null(p0)) {
+  #     HTML(paste('<br/>'), paste("<pre>","<font color=\"#FF0000\"><b>",'Power calculation terminated: run time exceeded the maximum permitted time by user.', "</b></font>"))
+  #   } else {
+  #     if (round(p0$power, 2) >= 0.8) {
+  #       HTML(paste('<br/>'), paste("<pre>",'Estimated power:', "<font color=\"#1b7c45\"><b>",round(p0$power, 2), "</b></font>"))
+  #     }
+  #     else HTML(paste('<br/>'), paste("<pre>",'Estimated power:', "<font color=\"#FF0000\"><b>",round(p0$power, 2), "</b></font>"))
+  #   }
+  # 
+  # })
+  
+  output$alpha <- DT::renderDataTable({
     power_alpha0 <- power_alpha_calc()
-    p0 = power_alpha0$alpha_out #alpha_calc()
-    if (is.null(p0)) {
-      HTML(paste('<br/>'), paste("<pre>","<font color=\"#FF0000\"><b>",'Power calculation terminated: run time exceeded the maximum permitted time by user.', "</b></font>"))
-    } else {
-      if (round(p0$alpha, 2) <= 0.05) {
-        HTML(paste('<br/>'), paste("<pre>",'Estimated type I error rate:', "<font color=\"#1b7c45\"><b>",round(p0$alpha, 2), "</b></font>"))
+    p0 = power_alpha0$alpha_out #power_calc()
+    
+    if (!is.null(p0)) {
+      a0 = c()
+      for (i in 1:length(p0$alpha)) {
+        if (p0$alpha[i]<=0.05) 
+          a0[i] = paste("<font color=\"#1b7c45\"><b>",round(p0$alpha[i], 2), "</b></font>") else
+            a0[i] = paste("<font color=\"#FF0000\"><b>",round(p0$alpha[i], 2), "</b></font>")
       }
-      else HTML(paste('<br/>'), paste("<pre>",'Estimated type I error rate:', "<font color=\"#FF0000\"><b>",round(p0$alpha, 2), "</b></font>"))
+      d0 = t(data.frame(alpha = a0))
+      if (input$compCon == T) {
+        colnames(d0) = paste('Treatment', 2:input$nt)
+        row.names(d0) = "<b>Type I error rate</b>"
+        datatable(d0, rownames = T, escape = FALSE,
+                  caption = paste('Probability of detecting a false positive effect for each treatment against the reference treatment:'))
+      } else {
+        colnames(d0) = paste(' ')
+        row.names(d0) = "<b>Type I error rate</b>"
+        datatable(d0, rownames = T, escape = FALSE,
+                  caption = paste('Probability of false positive:'))
+      }
+      
     }
-
   })
+
+  # output$alpha <- renderUI({
+  #   power_alpha0 <- power_alpha_calc()
+  #   p0 = power_alpha0$alpha_out #alpha_calc()
+  #   if (is.null(p0)) {
+  #     HTML(paste('<br/>'), paste("<pre>","<font color=\"#FF0000\"><b>",'Power calculation terminated: run time exceeded the maximum permitted time by user.', "</b></font>"))
+  #   } else {
+  #     if (round(p0$alpha, 2) <= 0.05) {
+  #       HTML(paste('<br/>'), paste("<pre>",'Estimated type I error rate:', "<font color=\"#1b7c45\"><b>",round(p0$alpha, 2), "</b></font>"))
+  #     }
+  #     else HTML(paste('<br/>'), paste("<pre>",'Estimated type I error rate:', "<font color=\"#FF0000\"><b>",round(p0$alpha, 2), "</b></font>"))
+  #   }
+  # 
+  # })
 
   output$ssdist <- renderPlot({
     power_alpha0 <- power_alpha_calc()
@@ -669,7 +730,14 @@ shinyServer(function(input, output, session) {
   formData <- reactive({
     power_alpha0 <- power_alpha_calc()
     p0 = power_alpha0$power_out #power_calc()
-    
+    p00 = power_alpha0$alpha_out #alpha_calc()
+    n0 = length(p0$power)
+    pow = rep(NA, 4)
+    pow[1:n0] = p0$power
+    alpha = ifelse(!is.null(p00), p00$alpha, NA)
+    n1 = length(alpha)
+    alph = rep(NA, 4)
+    alph[1:n1] = alpha
     if (!is.null(p0)) {
       d0 = round(quantile(p0$Nt, c(0,.25,.5,.75,1)))
       d00 = round(mean(input$max - p0$Nt))
@@ -677,8 +745,7 @@ shinyServer(function(input, output, session) {
       d0 = NA
       d00 = NA
     }
-    p00 = power_alpha0$alpha_out #alpha_calc()
-    data <- c(sapply(fields, function(x) ifelse(is.null(input[[x]]), NA, input[[x]])), c(p0$power, ifelse(!is.null(p00), p00$alpha, NA), round(mean(p0$Nt)), round(d0), round(d00)))
+    data <- c(sapply(fields, function(x) ifelse(is.null(input[[x]]), NA, input[[x]])), c(pow, alph, round(mean(p0$Nt)), round(d0), round(d00)))
     names(data) = names0
     data
   })
@@ -734,18 +801,34 @@ shinyServer(function(input, output, session) {
     power_alpha0 <- power_alpha_calc()
     p0 = power_alpha0$power_out #power_calc()
     a0 = power_alpha0$alpha_out #alpha_calc()
-    al0 = ifelse(!is.null(a0), a0$alpha, NULL)
-    pow0 = ifelse(!is.null(p0), p0$power, NULL)
+    if(!is.null(a0)) al0 = a0$alpha else al0 =  NULL
+    if(!is.null(a0)) pow0 = p0$power else pow0 =  NULL
     d0 = ifelse(!is.null(p0), mean(p0$Nt * input$ec), NULL)
     al1 = alpha_calc_RCT()
     pow1 = power_calc_RCT()
     d1 = input$max * input$ec
-    
     BRATvsBRCTPlot(a0 = al0, a1 = al1,
-                   p0 = pow0, p1 = pow1,
+                   p0 = pow0, p1 = pow1, 
                    c0 = d0, c1 = d1)
     
   })
+  
+  output$test <- renderText({
+    power_alpha0 <- power_alpha_calc()
+    p0 = power_alpha0$power_out #power_calc()
+    a0 = power_alpha0$alpha_out #alpha_calc()
+    if(!is.null(a0)) al0 = a0$alpha else al0 =  NULL
+    if(!is.null(a0)) pow0 = p0$power else pow0 =  NULL
+    d0 = ifelse(!is.null(p0), mean(p0$Nt * input$ec), NULL)
+    al1 = alpha_calc_RCT()
+    pow1 = power_calc_RCT()
+    d1 = input$max * input$ec
+    pow0
+    
+  })
+  
+  
+  
     
       #' @param a0 alpha for BRAT
       #' @param a1 alpha for BRCT
@@ -784,3 +867,4 @@ shinyServer(function(input, output, session) {
   addPopover(session, "postPlot", "Posterior", content = paste0("<p>Posterior density of treatment effects on the primary outcome at five equally spaced interim looks. As more data is collected the posterior distribution becomes more focused. If a treatment arm is stopped early due to futility, the corresponding posterior does not evolve further.</p>"), trigger = 'click')
   addPopover(session, "supPlot", "Probabilities of superiority", content = paste0("<p>Probabilities of superiority of each treatment in terms of the effect on primary outcome. As evidence of better performance is observed for a treatment arm the corresponding curve ascends. The grey horizonthal line shows the upper threshold that if reached by any of the curves the trial is stopped.</p>"), trigger = 'click')
 })
+

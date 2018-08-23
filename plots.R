@@ -11,10 +11,11 @@ psup_plot = function(trial, upper) {
   df = melt(psup)
   names(df) = c('treatment', 'interim_look', 'p.best')
   df$treatment = as.factor(df$treatment)
-  df$interim_look = as.integer(df$interim_look)
+  df$interim_look = as.integer(df$interim_look) - 1
   p = ggplot(df, aes(x = interim_look, y = p.best, color = treatment)) +
     geom_line(aes(linetype = treatment),size = 1) + geom_hline(yintercept = upper, color = 'darkgrey') +
     scale_color_manual(values = cbPalette) +
+    ylab('probability of superiority') + xlab('interim look') +
     theme(axis.text=element_text(size=12),
           axis.title=element_text(size=14,face="bold"),
           strip.text.x = element_text(size = 8, face = "bold"))
@@ -164,6 +165,7 @@ designPlot = function(trial) {
     end[i] = max(which(c0 == TRUE))
   }
   df = data.frame(arm = paste('Treatment', 1:nt), start = as.integer(start), end = as.integer(end))
+  #df$arm = factor(df$arm, levels = levels(df$arm)[rev(order(df$arm))])
   p = ggplot(df, aes(colour=arm, x=start, y = arm, label = arm)) + 
     geom_segment(aes(x=start, xend=end, y=arm, yend=arm), size=15, alpha = .75) +
     xlab("Interim look") + geom_text(aes(x = start + nint/10), fontface = "bold", color = 'black') + 
@@ -193,24 +195,49 @@ designPlot = function(trial) {
 #' @export
 
 BRATvsBRCTPlot = function(a0, a1, p0, p1, c0, c1) {
-  df = data.frame(alpha = c(a0, a1), power = c(p0, p1), cost = c(c0, c1), design = c('BRAT', 'BRCT'))
-  p1 = ggplot(df, aes(fill=design, x=design, y = alpha)) + geom_bar(stat = 'identity', alpha = .75) +
-    theme_classic() + 
-    scale_fill_manual(values=cbPalette) +
-    theme(axis.text=element_text(size=12),
-          axis.title=element_text(size=14,face="bold"),
-          legend.position="none")
-  p2 = ggplot(df, aes(fill=design, x=design, y = power)) + geom_bar(stat = 'identity', alpha = .75) +
-    theme_classic() + 
-    scale_fill_manual(values=cbPalette[3:4]) +
-    theme(axis.text=element_text(size=12),
-          axis.title=element_text(size=14,face="bold"),
-          legend.position="none")
-  p3 = ggplot(df, aes(fill=design, x=design, y = cost)) + geom_bar(stat = 'identity', alpha = .75) +
+  dfc = data.frame(cost = c(c0, c1), design = c('BRAT', 'BRCT'))
+  if (length(a0)>1) {
+    nt0 = length(a0)
+    df = data.frame(alpha = c(a0, a1), power = c(p0, p1), 
+                    design = c(rep('BRAT', nt0) , rep('BRCT', nt0)), 
+                    arm = rep(paste('Treatment', 2:(nt0+1)), 2))
+    p1 = ggplot(df, aes(fill=design, x=design, y = alpha)) + geom_bar(stat = 'identity', alpha = .75) +
+      theme_classic() + facet_grid(arm ~.) + 
+      scale_fill_manual(values=cbPalette) +
+      theme(axis.text=element_text(size=12),
+            axis.title=element_text(size=14,face="bold"),
+            strip.text = element_text(face="bold", size=12),
+            legend.position="none")
+    p2 = ggplot(df, aes(fill=design, x=design, y = power)) + geom_bar(stat = 'identity', alpha = .75) +
+      theme_classic() + facet_grid(arm ~.) + 
+      scale_fill_manual(values=cbPalette[3:4]) +
+      theme(axis.text=element_text(size=12),
+            axis.title=element_text(size=14,face="bold"),
+            strip.text = element_text(face="bold", size=12),
+            legend.position="none")
+  } else {
+    df = data.frame(alpha = c(a0, a1), power = c(p0, p1), design = c('BRAT', 'BRCT'))
+    p1 = ggplot(df, aes(fill=design, x=design, y = alpha)) + geom_bar(stat = 'identity', alpha = .75) +
+      theme_classic() + ylab('type I error rate') +
+      scale_fill_manual(values=cbPalette) +
+      theme(axis.text=element_text(size=12),
+            axis.title=element_text(size=14,face="bold"),
+            strip.text = element_text(face="bold", size=12),
+            legend.position="none")
+    p2 = ggplot(df, aes(fill=design, x=design, y = power)) + geom_bar(stat = 'identity', alpha = .75) +
+      theme_classic() + 
+      scale_fill_manual(values=cbPalette[3:4]) +
+      theme(axis.text=element_text(size=12),
+            axis.title=element_text(size=14,face="bold"),
+            strip.text = element_text(face="bold", size=12),
+            legend.position="none")
+  }
+  p3 = ggplot(dfc, aes(fill=design, x=design, y = cost)) + geom_bar(stat = 'identity', alpha = .75) +
     theme_classic() + 
     scale_fill_manual(values=cbPalette[5:6]) +
     theme(axis.text=element_text(size=12),
           axis.title=element_text(size=14,face="bold"),
+          strip.text = element_text(face="bold", size=12),
           legend.position="none")
   return(grid.arrange(p1, p2, p3, nrow = 1, ncol = 3))
 }

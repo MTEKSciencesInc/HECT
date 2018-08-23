@@ -3,7 +3,8 @@ outputDir <- "Data"
 
 names0 <- c('nTreatment', paste('effect', 1:5, sep = ''), 'effectType',
             paste('adherence', 1:5, sep = ''), 'burninSampleSize', 'interimSampleSize', 'supThreshold',
-            'futThreshold', 'maxSampleSize', 'power', 'typeIerror', 'ESS', 'minSS', 'firstQuartileSS',
+            'futThreshold', 'maxSampleSize', paste('power', 1:4, sep = '') , 
+            paste('typeIerror', 1:4, sep = ''), 'ESS', 'minSS', 'firstQuartileSS',
             'medianSS', 'thirdQuartileSS', 'maxSS', 'ESavedSS')
 fields <- c('nt', paste('eff', 1:5, sep = ''), 'efftype', paste('adh', 1:5, sep = ''), 'burnin',
            'batchsize', 'upthresh', 'lowthresh', 'max')

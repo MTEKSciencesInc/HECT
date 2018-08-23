@@ -855,7 +855,7 @@ AE_sim = function(trial,nt, theta_ae, response.type) {
 #'
 #' @export
 sim_wrapper_RCT = function(i, nt, theta0, maxN = 500, N = 1000, upper = 0.95,
-                           response.type, conjugate_prior = T, padhere = rep(1,nt)) {
+                           response.type, conjugate_prior = T, padhere = rep(.95,nt)) {
   ng = maxN
   nb = maxN
   j = 0
@@ -897,14 +897,11 @@ sim_wrapper_RCT = function(i, nt, theta0, maxN = 500, N = 1000, upper = 0.95,
     theta_new = apply(post0, 1, function(x) rnorm(N, x[1], x[2]))
   }
   check = t(apply(theta_new, 1, sup_check))
-  ccheck = t(apply(theta_new, 1, con_sup_check))
   psupp = apply(check, 2, mean)
-  cpsupp = apply(ccheck, 2, mean)
   pbin = ifelse(psupp > upper, 1, 0)
   pow = sum(pbin[which.max(theta0)] == 1)
-  pow1 = ifelse(cpsupp > upper, 1, 0)
   alpha = sum(sum(pbin) == 1)
-  out = list(power = pow, power1 = pow1, alpha = alpha)
+  out = list(power = pow, alpha = alpha)
   return(out)
 }
 
@@ -916,11 +913,11 @@ sim_wrapper_RCT = function(i, nt, theta0, maxN = 500, N = 1000, upper = 0.95,
 #'
 #' @export
 power_compute_RCT = function(nt, theta0, maxN = 500, N = 1000, upper = 0.95, response.type, 
-                             conjugate_prior = T, padhere = rep(1, nt), compCon = F, M = 500) {
+                             conjugate_prior = T, padhere = c(.95,.95,.95), M = 500) {
   df = data.frame(t(sapply(1:M, sim_wrapper_RCT, nt = nt, theta0 = theta0, maxN = maxN,
                            N = N, upper = upper, response.type = response.type,
                            conjugate_prior = conjugate_prior, padhere = padhere, simplify = T)))
-  if (compCon == T) power = apply(do.call(rbind, df$power1), 2, mean) else power = mean(unlist(df$power))
+  power = mean(unlist(df$power))
   return(power)
 }
 
@@ -932,12 +929,13 @@ power_compute_RCT = function(nt, theta0, maxN = 500, N = 1000, upper = 0.95, res
 #'
 #' @export
 alpha_compute_RCT = function(nt, theta0, maxN = 500, N = 1000, upper = 0.95, response.type, 
-                             conjugate_prior = T, compCon = F, M = 500) {
+                             conjugate_prior = T, M = 500) {
   if (response.type == 'absolute' | response.type == 'count') theta0 = rep(0, nt)
   if (response.type == 'rate') theta0 = rep(mean(theta0), nt)
   df = data.frame(t(sapply(1:M, sim_wrapper_RCT, nt = nt, theta0 = theta0, maxN = maxN,
                            N = N, upper = upper, response.type = response.type,
                            conjugate_prior = conjugate_prior, simplify = T)))
-  if (compCon == T) alpha = apply(do.call(rbind, df$power1), 2, mean) else alpha = mean(unlist(df$alpha))
+  alpha = mean(unlist(df$alpha))
   return(alpha)
 }
+
