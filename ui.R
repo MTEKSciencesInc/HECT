@@ -111,17 +111,28 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                  tabsetPanel(
                    tabPanel(#"Compute trial design properties",
                      
-                     div(style="display:inline-block; text-align: middle",
-                         "Trial design properties \n",
+                     div(style="display:inline-block; text-align: middle; width:280px",
+                         fluidRow(align = "middle",
+                                  "Trial design properties \n"
+                         ),
                          
-                         numericInput("M", "Number of simulations", value = 100),
-                         bsTooltip("M", "Number of Monte Carlo simulations to estimate the power.",
-                                   "right", options = list(container = "body")),
+                         fluidRow(
+                           column(5, align = "middle",
+                                  div(tags$b("Number of simulations"), style = "font-size:90%")
+                           ),
+                           column(4, align = "middle",
+                                  numericInput("M", label = NULL, value = 100),
+                                  bsTooltip("M", "Number of Monte Carlo simulations to estimate the power.",
+                                            "right", options = list(container = "body")) 
+                           ),
+                           column(1, align = "middle",
+                                  div(actionButton("button2", "Run", 
+                                                   style="padding:4px; font-size:100%;
+                                              color:#FFF; background-color: #0095ff; border-color:#07c"))
+                           )
+                           
+                         )
                          
-                        
-                         div(actionButton("button2", "Run", 
-                                          style="position:relative; left:39%; padding:4px; font-size:100%;
-                                          color:#FFF; background-color: #0095ff; border-color:#07c"))
                          ),
                      
                      # div(style="display:inline-block; margin-left:25px; margin-right:25px;",
@@ -197,6 +208,7 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                          "Comparison with RCT \n",
                          div(actionButton("compRCT", "Run", 
                                           style="position:relative;left: 37%; padding:4px; font-size:100%;
+                                          margin-bottom:19px;
                                           color:#FFF; background-color: #0095ff; border-color:#07c"))
                      ),
                      
@@ -221,6 +233,7 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                          "Single trial simulation \n",
                          div(actionButton("button", "Run", 
                                           style="position:relative;left: 38%; padding:4px; font-size:100% ;
+                                          margin-bottom:19px;
                                           color:#FFF; background-color: #0095ff; border-color:#07c"))
                          # other colour option
                          # color: #39739d; background-color: #E1ECF4; border-color: #96bdd9
