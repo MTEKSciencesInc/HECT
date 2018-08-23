@@ -125,12 +125,13 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                      
                      div(style="display:inline-block; text-align: middle; width:280px",
                          fluidRow(align = "middle",
-                                  "Trial design properties \n"
+                                  div("Trial design properties \n", 
+                                      style = "font-size:120%; font-weight:bold; margin-bottom:14px")
                          ),
                          
                          fluidRow(
                            column(5, align = "middle",
-                                  div(tags$b("Number of simulations"), style = "font-size:90%")
+                                  div("Number of simulations", style = "font-size:90%")
                            ),
                            column(4, align = "middle",
                                   numericInput("M", label = NULL, value = 100),
@@ -233,13 +234,17 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                    tabsetPanel(
                    tabPanel(
                      
-                     div(style="display:inline-block; text-align: middle",
-                         "Single trial simulation \n",
-                         div(actionButton("button", "Run", 
-                                          style="position:relative;left: 38%; padding:4px; font-size:100% ;
-                                          margin-bottom:19px;
-                                          color:#FFF; background-color: #0095ff; border-color:#07c"))
-                         # other colour option
+                     div(style="display:inline-block; text-align: middle; width:280px",
+                         fluidRow(align = "middle",
+                                  div("Single trial simulation \n", 
+                                      style = "font-size:120%; font-weight:bold; margin-bottom:10px")
+                         ),
+                         fluidRow(align = "middle",
+                                  actionButton("button", "Run", 
+                                               style="padding:4px; font-size:100% ;margin-bottom:19px;
+                                          color:#FFF; background-color: #0095ff; border-color:#07c")
+                                  )
+                        # other colour option
                          # color: #39739d; background-color: #E1ECF4; border-color: #96bdd9
                      ),
                      
