@@ -119,26 +119,32 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                
                mainPanel(
                  
-                 
                  tabsetPanel( 
                    tabPanel(# START 1st row tabs
                      
-                     div(style="display:inline-block; text-align: middle; width:280px",
-                         fluidRow(align = "middle",
-                                  div("Trial design properties \n", 
-                                      style = "font-size:120%; font-weight:bold; margin-bottom:14px")
+                         fluidRow(align = "left", style = "width:1220px; margin-left:10px",
+                                  h1("Trial design properties")
                          ),
-                         
+                         br(),
                          fluidRow(
-                           column(5, align = "middle",
-                                  div("Number of simulations", style = "font-size:90%")
-                           ),
-                           column(4, align = "middle",
-                                  numericInput("M", label = NULL, value = 100),
+                           column(2, align = "middle",
+                                  numericInput("M", label = "Number of simulations", value = 100),
                                   bsTooltip("M", "Number of Monte Carlo simulations to estimate the power.",
                                             "right", options = list(container = "body")) 
                            ),
-                           column(1, align = "middle",
+                           column(2, align = "middle",
+                                  br(),
+                                  checkboxInput("tlimit", "Set run time limit")
+                           ),
+                           column(2, align = "middle",
+                                  conditionalPanel(
+                                    condition = "input.tlimit == true",
+                                    numericInput("Tpower", "Maximum run time (s)", value = NULL),
+                                    bsTooltip("Tpower", "The simulation is terminated if run time exceeds this limit.",
+                                              "right", options = list(container = "body")))
+                           ),
+                           column(5, align = "right",
+                                  br(),
                                   div(actionButton("button2", "Run", 
                                                    style="padding:4px; font-size:100%;
                                               color:#FFF; background-color: #0095ff; border-color:#07c"))
@@ -146,18 +152,12 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                            
                          )
                          
-                     )),  # END 1st row tabs
+                   ),  # END 1st row tabs
+                     
                      
                      tabsetPanel( # START 2nd row tabs
                        tabPanel("Power",
-                                
-                                checkboxInput("tlimit", "Set a limit for run time"),
-                                conditionalPanel(
-                                  condition = "input.tlimit == true",
-                                  numericInput("Tpower", "Maximum permitted run time in seconds", value = NULL),
-                                  bsTooltip("Tpower", "The simulation is terminated if run time exceeds this limit.",
-                                            "right", options = list(container = "body"))),
-                                
+                                br(),
                                 DT::dataTableOutput("power")
                        ),
                        tabPanel("Sample size distribution/cost evaluation", 
@@ -234,16 +234,24 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                    tabsetPanel(
                    tabPanel(
                      
-                     div(style="display:inline-block; text-align: middle; width:280px",
-                         fluidRow(align = "middle",
-                                  div("Single trial simulation \n", 
-                                      style = "font-size:120%; font-weight:bold; margin-bottom:10px")
-                         ),
-                         fluidRow(align = "middle",
-                                  actionButton("button", "Run", 
-                                               style="padding:4px; font-size:100% ;margin-bottom:19px;
+                     fluidRow(align = "left", style = "width:1220px; margin-left:10px",
+                              h1("Single trial simulation")
+                     ),
+                     fluidRow(align = "right", style = "margin-right:108px",
+                              actionButton("button", "Run", 
+                                           style="padding:4px; font-size:100% ;margin-bottom:19px;
                                           color:#FFF; background-color: #0095ff; border-color:#07c")
-                                  )
+                              
+                     # div(style="display:inline-block; text-align: middle; width:280px",
+                     #     # fluidRow(align = "middle",
+                     #     #          div("Single trial simulation \n", 
+                     #     #              style = "font-size:120%; font-weight:bold; margin-bottom:10px")
+                     #     # ),
+                     #     fluidRow(align = "right",
+                     #              actionButton("button", "Run", 
+                     #                           style="padding:4px; font-size:100% ;margin-bottom:19px;
+                     #                      color:#FFF; background-color: #0095ff; border-color:#07c")
+                     #              )
                         # other colour option
                          # color: #39739d; background-color: #E1ECF4; border-color: #96bdd9
                      ),
