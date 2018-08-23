@@ -557,6 +557,10 @@ shinyServer(function(input, output, session) {
     power_alpha0 <- power_alpha_calc()
     p0 = power_alpha0$power_out #power_calc()
     
+    # if (is.null(p0)) {
+    #       HTML(paste('<br/>'), paste("<pre>","<font color=\"#FF0000\"><b>",'Power calculation terminated: run time exceeded the maximum permitted time by user.', "</b></font>"))
+    #     }
+    
     if (!is.null(p0)) {
       pow0 = c()
       for (i in 1:length(p0$power)) {
@@ -569,12 +573,22 @@ shinyServer(function(input, output, session) {
         colnames(d0) = paste('Treatment', 2:input$nt)
         row.names(d0) = "<b>Power</b>"
         datatable(d0, rownames = T, escape = FALSE,
-                  caption = paste('Power to detect the effect of all treatments against the reference treatment:'))
+                  caption = paste('Power to detect the effect of all treatments against the reference treatment:'),
+                  options = list(bLengthChange=0,                       # show/hide records per page dropdown
+                                 bFilter=0,                             # global search box on/off
+                                 bInfo=0,
+                                 bPaginate=0,
+                                 bSort=0))
       } else {
         colnames(d0) = paste(' ')
         row.names(d0) = "<b>Power</b>"
         datatable(d0, rownames = T, escape = FALSE,
-                  caption = paste('Power to detect the superior treatment:'))
+                  caption = paste('Power to detect the superior treatment:'), 
+                  options = list(bLengthChange=0,                       # show/hide records per page dropdown
+                                 bFilter=0,                             # global search box on/off
+                                 bInfo=0,
+                                 bPaginate=0,
+                                 bSort=0))
       }
       
     }
@@ -621,12 +635,22 @@ shinyServer(function(input, output, session) {
         colnames(d0) = paste('Treatment', 2:input$nt)
         row.names(d0) = "<b>Type I error rate</b>"
         datatable(d0, rownames = T, escape = FALSE,
-                  caption = paste('Probability of detecting a false positive effect for each treatment against the reference treatment:'))
+                  caption = paste('Probability of detecting a false positive effect for each treatment against the reference treatment:'),
+                  options = list(bLengthChange=0,                       # show/hide records per page dropdown
+                                 bFilter=0,                             # global search box on/off
+                                 bInfo=0,
+                                 bPaginate=0,
+                                 bSort=0))
       } else {
         colnames(d0) = paste(' ')
         row.names(d0) = "<b>Type I error rate</b>"
         datatable(d0, rownames = T, escape = FALSE,
-                  caption = paste('Probability of false positive:'))
+                  caption = paste('Probability of false positive:'),
+                  options = list(bLengthChange=0,                       # show/hide records per page dropdown
+                                 bFilter=0,                             # global search box on/off
+                                 bInfo=0,
+                                 bPaginate=0,
+                                 bSort=0))
       }
       
     }

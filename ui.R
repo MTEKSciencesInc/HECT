@@ -180,6 +180,7 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                                 #             "right", options = list(container = "body"))),
                                 
                                 #actionButton("button01", "Compute"),
+                                br(),
                                 DT::dataTableOutput("alpha")
                        ),
                        tabPanel("Saved simulation configurations and results",
