@@ -1,2 +1,0 @@
-"nTreatment","effect1","effect2","effect3","effect4","effect5","effectType","adherence1","adherence2","adherence3","adherence4","adherence5","burninSampleSize","interimSampleSize","supThreshold","futThreshold","maxSampleSize","power1","power2","power3","power4","typeIerror1","typeIerror2","typeIerror3","typeIerror4","ESS","minSS","firstQuartileSS","medianSS","thirdQuartileSS","maxSS","ESavedSS"
-"3","0","0.2","0.9",NA,NA,"absolute","1","1","1",NA,NA,"30","20","0.975","0.01","500","0.06","0.98",NA,NA,"0.16",NA,NA,NA,"55","40","40","40","60","120","445"
