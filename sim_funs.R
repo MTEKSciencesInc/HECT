@@ -720,6 +720,9 @@ sim_wrapper = function(i, nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.97
   alpha = sum(sum(pbin) == 1)
   pow = pbin[-1]
   out = list(power0 = pow0, power = pow, alpha = alpha, N_terminate = length(y))
+  
+  incProgress(1)#, detail = paste("Finished simulation", i))
+  
   return(out)
 }
 
