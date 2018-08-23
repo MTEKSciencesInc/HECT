@@ -94,22 +94,27 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                  
                  ),
                  
-                 
-                 
-                 div(style="display: inline-block;",numericInput("burnin", "Burn-in sample size:",
-                                                                 value = 30)),
+                 div(style="display: inline-block;",
+                     numericInput("burnin", "Burn-in sample size:",
+                                  width = "270px", value = 30)),
                  bsTooltip("burnin", "This is the number of patients that need to be enrolled into the trial before adaptation begins.",
                            "right", options = list(container = "body")),
-                 div(style="display: inline-block;",numericInput("batchsize", "Sample size between two interim looks:",
-                                                                 value = 20)),
+                 
+                 div(style="display: inline-block;",
+                     numericInput("batchsize", "Sample size between two interim looks:",
+                                  width = "270px", value = 20)),
                  bsTooltip("batchsize", "This is the number of patients enrolled into the trial between two adaptations. If this number is small adaptations are performed more frequently resulting in more computation and increasing simulation time.",
                            "right", options = list(container = "body")),
-                 div(style="display: inline-block;",numericInput("max", "Maximum total sample size:",
-                                                                 value = 500)),
+                 
+                 div(style="display: inline-block;",
+                     numericInput("max", "Maximum total sample size:",
+                                  width = "270px", value = 500)),
                  bsTooltip("max", "If the total number of patients enrolled into the trial reaches this number, the trial will be terminated.",
                            "right", options = list(container = "body")),
-                 div(style="display: inline-block;",numericInput("ec", "Enrollment cost per patient ($):",
-                                                                 value = 0))
+                 
+                 div(style="display: inline-block;",
+                     numericInput("ec", "Enrollment cost per patient ($):",
+                                  width = "270px", value = 0))
                ),
                
                mainPanel(
