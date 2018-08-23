@@ -41,16 +41,10 @@ shinyServer(function(input, output, session) {
                       label = "Treatment:",
                       choices = c(paste('treatment', 1:x))
     )
+    
   })
 
   # Workaround for hover box not showing up properly for superiority bar given diffrerent options
-  upthreshold <- eventReactive(input$compCon, {
-    if (input$compCon == "TRUE") {
-      return(input$upthreshT)
-    } else {
-      return(input$upthreshF)
-    }
-  })
 
   dataInput = eventReactive(input$button, {
     if(isValid_num0() | input$efftype == 'absolute'){
@@ -88,6 +82,13 @@ shinyServer(function(input, output, session) {
       for (i in 1:input$nt) adh[i] = as.numeric(input[[adh0[i]]])
       if (is.null(input$adapt)) adp = F else adp = input$adapt
       if (is.null(input$MID)) mid = 0 else mid = input$MID
+      
+      if (input$compCon == "TRUE") {
+        upthreshold <- input$upthreshT
+      } else {
+        upthreshold <- input$upthreshF
+      }
+      
       RAR_sim(nt = input$nt, theta0 = eff, nb = input$batchsize, maxN = input$max, N = 1000,
               upper = upthreshold, uppfut = input$uppfut, lower = input$lowthresh,
               burn = input$burnin, response.type = input$efftype, conjugate_prior = T, padhere = adh, adapt = adp,
@@ -126,6 +127,13 @@ shinyServer(function(input, output, session) {
     for (i in 1:input$nt) eff[i] = as.numeric(input[[eff0[i]]])
     if (is.null(input$adapt)) adp = F else adp = input$adapt
     if (is.null(input$MID)) mid = 0 else mid = input$MID
+    
+    if (input$compCon == "TRUE") {
+      upthreshold <- input$upthreshT
+    } else {
+      upthreshold <- input$upthreshF
+    }
+    
     withProgress(message = 'Estimating power and type I error', value = 0, max = 2*input$M, {
     
     power_out <- withTimeout({power_compute(nt = input$nt, theta0 = eff, nb = input$batchsize, maxN = input$max, N = 1000,
@@ -191,6 +199,12 @@ shinyServer(function(input, output, session) {
     eff = c()
     for (i in 1:input$nt) eff[i] = as.numeric(input[[eff0[i]]])
     
+    if (input$compCon == "TRUE") {
+      upthreshold <- input$upthreshT
+    } else {
+      upthreshold <- input$upthreshF
+    }
+    
     #withProgress(message = 'Calculating power', value = 0, {
     withTimeout({power_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
                                upper = upthreshold,
@@ -203,6 +217,13 @@ shinyServer(function(input, output, session) {
   })
   
   alpha_calc_RCT = eventReactive(input$compRCT, {
+    
+    if (input$compCon == "TRUE") {
+      upthreshold <- input$upthreshT
+    } else {
+      upthreshold <- input$upthreshF
+    }
+    
     withTimeout({alpha_compute_RCT(nt = input$nt, maxN = input$max, N = 1000,
                                upper = upthreshold, 
                                response.type = input$efftype, conjugate_prior = T, compCon = input$compCon, 
@@ -455,6 +476,11 @@ shinyServer(function(input, output, session) {
 
   output$supPlot <- renderPlot({
     trial = dataInput()
+    if (input$compCon == "TRUE") {
+      upthreshold <- input$upthreshT
+    } else {
+      upthreshold <- input$upthreshF
+    }
     psup_plot(trial, upthreshold)
   })
   
