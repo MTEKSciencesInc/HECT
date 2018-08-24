@@ -833,7 +833,7 @@ shinyServer(function(input, output, session) {
     eff
   })
   
-  output$BRATvsBRCTplot <- renderPlot({
+  output$HECTvsBRCTplot <- renderPlot({
     power_alpha0 <- power_alpha_calc()
     p0 = power_alpha0$power_out #power_calc()
     a0 = power_alpha0$alpha_out #alpha_calc()
@@ -843,7 +843,7 @@ shinyServer(function(input, output, session) {
     al1 = alpha_calc_RCT()
     pow1 = power_calc_RCT()
     d1 = input$max * input$ec
-    BRATvsBRCTPlot(a0 = al0, a1 = al1,
+    HECTvsBRCTPlot(a0 = al0, a1 = al1,
                    p0 = pow0, p1 = pow1, 
                    c0 = d0, c1 = d1)
     
@@ -863,16 +863,6 @@ shinyServer(function(input, output, session) {
     
   })
   
-  
-  
-    
-      #' @param a0 alpha for BRAT
-      #' @param a1 alpha for BRCT
-      #' @param p0 power for BRAT
-      #' @param p1 power for BRCT
-      #' @param c0 cost for BRAT
-      #' @param c1 cost for BRCT
-  
   output$RCT <- DT::renderDataTable({
     power_alpha0 <- power_alpha_calc()
     p0 = power_alpha0$power_out #power_calc()
@@ -884,7 +874,7 @@ shinyServer(function(input, output, session) {
     pow1 = power_calc_RCT()
     d1 = input$max * input$ec
     dt = data.frame(c(al0, al1), c(pow0, pow1), c(d0, d1))
-    row.names(dt) = c('BRAT', 'BRCT')
+    row.names(dt) = c('HECT', 'BRCT')
     colnames(dt) = c('type I error rate', 'power', 'cost($)')
     datatable(dt, rownames = T)
   })

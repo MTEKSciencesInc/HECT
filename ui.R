@@ -201,7 +201,7 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                                                  style="padding:4px; font-size:100%;
                                                  color:#FFF; background-color: #0095ff; border-color:#07c")),
                                 
-                                plotOutput("BRATvsBRCTplot"),
+                                plotOutput("HECTvsBRCTplot"),
                                 br()
                                 #,
                                 #DT::dataTableOutput('RCT')

@@ -182,24 +182,24 @@ designPlot = function(trial) {
 }
 
 
-#' BRATvsBRCT plot
+#' HECTvsBRCT plot
 #'
-#' @param a0 alpha for BRAT
+#' @param a0 alpha for HECT
 #' @param a1 alpha for BRCT
-#' @param p0 power for BRAT
+#' @param p0 power for HECT
 #' @param p1 power for BRCT
-#' @param c0 cost for BRAT
+#' @param c0 cost for HECT
 #' @param c1 cost for BRCT
 #'
 #' @return Comparison plots
 #' @export
 
-BRATvsBRCTPlot = function(a0, a1, p0, p1, c0, c1) {
-  dfc = data.frame(cost = c(c0, c1), design = c('BRAT', 'BRCT'))
+HECTvsBRCTPlot = function(a0, a1, p0, p1, c0, c1) {
+  dfc = data.frame(cost = c(c0, c1), design = c('HECT', 'BRCT'))
   if (length(a0)>1) {
     nt0 = length(a0)
     df = data.frame(alpha = c(a0, a1), power = c(p0, p1), 
-                    design = c(rep('BRAT', nt0) , rep('BRCT', nt0)), 
+                    design = c(rep('HECT', nt0) , rep('BRCT', nt0)), 
                     arm = rep(paste('Treatment', 2:(nt0+1)), 2))
     p1 = ggplot(df, aes(fill=design, x=design, y = alpha)) + geom_bar(stat = 'identity', alpha = .75) +
       theme_classic() + facet_grid(arm ~.) + 
@@ -216,7 +216,7 @@ BRATvsBRCTPlot = function(a0, a1, p0, p1, c0, c1) {
             strip.text = element_text(face="bold", size=12),
             legend.position="none")
   } else {
-    df = data.frame(alpha = c(a0, a1), power = c(p0, p1), design = c('BRAT', 'BRCT'))
+    df = data.frame(alpha = c(a0, a1), power = c(p0, p1), design = c('HECT', 'BRCT'))
     p1 = ggplot(df, aes(fill=design, x=design, y = alpha)) + geom_bar(stat = 'identity', alpha = .75) +
       theme_classic() + ylab('type I error rate') +
       scale_fill_manual(values=cbPalette) +
