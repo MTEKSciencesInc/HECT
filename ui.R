@@ -143,9 +143,9 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                                     bsTooltip("Tpower", "The simulation is terminated if run time exceeds this limit.",
                                               "right", options = list(container = "body")))
                            ),
-                           column(5, align = "right",
+                           column(5, align = "right", style = "margin-right:80px", 
                                   br(),
-                                  div(actionButton("button2", "Run", 
+                                  div(actionButton("button2", "Run", #qqq
                                                    style="padding:4px; font-size:100%;
                                               color:#FFF; background-color: #0095ff; border-color:#07c"))
                            )
@@ -224,27 +224,18 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                      fluidRow(align = "left", style = "width:1220px; margin-left:10px",
                               h1("Single trial simulation")
                      ),
-                     fluidRow(align = "right", style = "margin-right:108px",
-                              actionButton("button", "Run", 
-                                           style="padding:4px; font-size:100% ;margin-bottom:19px;
-                                          color:#FFF; background-color: #0095ff; border-color:#07c")
+                     fluidRow(
+                       column(6, align = "middle",
+                              div("TEXT FOR SPACING", style = "color:#FFF")),
+                       
+                       column(5, align = "right", style = "margin-right:80px", 
+                              div(actionButton("button", "Run", #qqq
+                                               style="padding:4px; font-size:100%;
+                                               color:#FFF; background-color: #0095ff; border-color:#07c")))
                               
-                     # div(style="display:inline-block; text-align: middle; width:280px",
-                     #     # fluidRow(align = "middle",
-                     #     #          div("Single trial simulation \n", 
-                     #     #              style = "font-size:120%; font-weight:bold; margin-bottom:10px")
-                     #     # ),
-                     #     fluidRow(align = "right",
-                     #              actionButton("button", "Run", 
-                     #                           style="padding:4px; font-size:100% ;margin-bottom:19px;
-                     #                      color:#FFF; background-color: #0095ff; border-color:#07c")
-                     #              )
                         # other colour option
                          # color: #39739d; background-color: #E1ECF4; border-color: #96bdd9
                      ),
-                     
-                     # div(style="display:inline-block; margin-left:25px; margin-right:25px;",
-                     #     actionButton("button", "Run single trial simulation", style="vertical-align: middle; padding:4px; font-size:100%")),
                      
                             tabsetPanel(
                               tabPanel("Design",
