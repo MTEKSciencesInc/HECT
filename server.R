@@ -646,6 +646,7 @@ shinyServer(function(input, output, session) {
       d0 = as.data.frame(p0$Nt)
       names(d0) = 'sample.size'
       ggplot(d0, aes(x = sample.size)) + geom_histogram(fill = '#33FFFF', alpha = .5, color = 'grey') +
+        xlab("sample size") +
         theme(axis.text=element_text(size=12),
               axis.title=element_text(size=14,face="bold"),
               strip.text.y = element_text(size = 12, face = "bold"))
@@ -659,7 +660,7 @@ shinyServer(function(input, output, session) {
     
     if (!is.null(p0)) {
       d0 = t(data.frame(quantile(p0$Nt, c(0,.25,.5,.75,1))))
-      row.names(d0) = 'sample.size'
+      row.names(d0) = 'sample size'
       colnames(d0) = paste(colnames(d0), 'quantile')
       datatable(d0, rownames = T, 
                 options = list(bLengthChange=0,                       # show/hide records per page dropdown
@@ -691,7 +692,7 @@ shinyServer(function(input, output, session) {
       d0 = as.data.frame(p0$Nt*input$ec)
       names(d0) = 'cost'
       ggplot(d0, aes(x = cost)) + geom_histogram(fill = 'purple', alpha = .5, color = 'grey') +
-        xlab('cost($)') +
+        xlab('cost ($)') +
         theme(axis.text=element_text(size=12),
               axis.title=element_text(size=14,face="bold"),
               strip.text.y = element_text(size = 12, face = "bold"))
