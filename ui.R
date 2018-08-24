@@ -123,7 +123,7 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                    tabPanel(# START 1st row tabs
                      
                          fluidRow(align = "left", style = "width:1220px; margin-left:10px",
-                                  h1("Trial design properties")
+                                  h3("Trial design properties")
                          ),
                          br(),
                          fluidRow(
@@ -222,7 +222,7 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                    tabPanel(
                      
                      fluidRow(align = "left", style = "width:1220px; margin-left:10px",
-                              h1("Single trial simulation")
+                              h3("Single trial simulation")
                      ),
                      fluidRow(
                        column(6, align = "middle",
