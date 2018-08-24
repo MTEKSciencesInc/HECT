@@ -136,15 +136,19 @@ shinyServer(function(input, output, session) {
     
     withProgress(message = 'Estimating power and type I error', value = 0, max = 2*input$M, {
     
-    power_out <- withTimeout({power_compute(nt = input$nt, theta0 = eff, nb = input$batchsize, maxN = input$max, N = 1000,
+    power_out <- withTimeout({power_compute(nt = input$nt, theta0 = eff, 
+                                            nb = input$batchsize, maxN = input$max, N = 1000,
                                upper = upthreshold, uppfut = input$uppfut, lower = input$lowthresh,
-                               burn = input$burnin, response.type = input$efftype, conjugate_prior = T, padhere = adh, adapt = adp,
+                               burn = input$burnin, response.type = input$efftype, 
+                               conjugate_prior = T, padhere = adh, adapt = adp,
                                platf = input$platf, compCon = input$compCon, MID = mid, M = input$M)},
                 timeout = ifelse(!is.null(input$Tpower), input$Tpower, Inf), onTimeout = 'silent')
     
-    alpha_out <- withTimeout({alpha_compute(nt = input$nt, theta0 = eff, nb = input$batchsize, maxN = input$max, N = 1000,
+    alpha_out <- withTimeout({alpha_compute(nt = input$nt, theta0 = eff, 
+                                            nb = input$batchsize, maxN = input$max, N = 1000,
                                             upper = upthreshold, uppfut = input$uppfut, lower = input$lowthresh,
-                                            burn = input$burnin, response.type = input$efftype, conjugate_prior = T, padhere = adh, adapt = adp,
+                                            burn = input$burnin, response.type = input$efftype, 
+                                            conjugate_prior = T, padhere = adh, adapt = adp,
                                             platf = input$platf, compCon = input$compCon, MID = mid,
                                M = input$M)},
                 timeout = ifelse(!is.null(input$Tpower), input$Tpower, 1000000), onTimeout = 'silent')
@@ -180,13 +184,17 @@ shinyServer(function(input, output, session) {
   
   alpha_calc_RCT = eventReactive(input$compRCT, {
     
+    eff0 = paste('eff', 1:input$nt, sep = '')
+    eff = c()
+    for (i in 1:input$nt) eff[i] = as.numeric(input[[eff0[i]]])
+    
     if (input$compCon == "TRUE") {
       upthreshold <- input$upthreshT
     } else {
       upthreshold <- input$upthreshF
     }
     
-    withTimeout({alpha_compute_RCT(nt = input$nt, maxN = input$max, N = 1000,
+    withTimeout({alpha_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
                                upper = upthreshold, 
                                response.type = input$efftype, conjugate_prior = T, compCon = input$compCon, 
                                M = input$M)}, 

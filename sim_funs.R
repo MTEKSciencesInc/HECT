@@ -737,7 +737,7 @@ sim_wrapper = function(i, nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.97
 power_compute = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppfut = 0.95, lower = .05,
                          burn = 10*nt, response.type, conjugate_prior = T, padhere = rep(0.95,nt), adapt = T,
                          platf = T, compCon = F, MID = 0, M = 100) {
-  df = data.frame(t(sapply(1:M, sim_wrapper, nt, theta0, nb = nb, maxN = maxN, N = N, upper = upper, uppfut = uppfut, lower = lower,
+  df = data.frame(t(sapply(1:M, sim_wrapper, nt, theta0 = theta0, nb = nb, maxN = maxN, N = N, upper = upper, uppfut = uppfut, lower = lower,
                            burn = burn, response.type, conjugate_prior = conjugate_prior, padhere = padhere, adapt = adapt,
                            platf = platf, compCon = compCon, MID = MID, simplify = T)))
   if (compCon == T) power = apply(do.call(rbind, df$power), 2, mean) else power = mean(unlist(df$power0))
@@ -757,7 +757,7 @@ alpha_compute = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975
                          platf = T, compCon = F, MID = 0, M = 100) {
   if (response.type == 'absolute' | response.type == 'count') theta0 = rep(0, nt)
   if (response.type == 'rate') theta0 = rep(mean(theta0), nt)
-  df = data.frame(t(sapply(1:M, sim_wrapper, nt, theta0, nb = nb, maxN = maxN, N = N, upper = upper, uppfut = uppfut, lower = lower,
+  df = data.frame(t(sapply(1:M, sim_wrapper, nt, theta0 = theta0, nb = nb, maxN = maxN, N = N, upper = upper, uppfut = uppfut, lower = lower,
                            burn = burn, response.type, conjugate_prior = conjugate_prior, padhere = padhere, adapt = adapt,
                            platf = platf, compCon = compCon, MID = MID, simplify = T)))
   if (compCon == T) alpha = apply(do.call(rbind, df$power), 2, mean) else alpha = mean(unlist(df$alpha))
