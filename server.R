@@ -661,7 +661,12 @@ shinyServer(function(input, output, session) {
       d0 = t(data.frame(quantile(p0$Nt, c(0,.25,.5,.75,1))))
       row.names(d0) = 'sample.size'
       colnames(d0) = paste(colnames(d0), 'quantile')
-      datatable(d0, rownames = T)
+      datatable(d0, rownames = T, 
+                options = list(bLengthChange=0,                       # show/hide records per page dropdown
+                               bFilter=0,                             # global search box on/off
+                               bInfo=0,
+                               bPaginate=0,
+                               bSort=0))
       }
 
   })
@@ -702,7 +707,12 @@ shinyServer(function(input, output, session) {
       d0 = t(data.frame(quantile(p0$Nt * input$ec, c(0,.25,.5,.75,1))))
       row.names(d0) = 'cost'
       colnames(d0) = paste(colnames(d0), 'quantile')
-      datatable(d0, rownames = T)
+      datatable(d0, rownames = T,
+                options = list(bLengthChange=0,                       # show/hide records per page dropdown
+                               bFilter=0,                             # global search box on/off
+                               bInfo=0,
+                               bPaginate=0,
+                               bSort=0))
     }
     
   })
