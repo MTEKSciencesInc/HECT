@@ -166,20 +166,6 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                                 htmlOutput('csave')),
                        tabPanel("Type I error rate",
                                 
-                                # wellPanel(tags$div(tags$em(
-                                #   HTML(paste(tags$span(style="color:darkred", "Note: Changing the effect sizes and adherence rates does not affect the type I error rate as it is computed under the null hypothesis (i.e., none of the treatments are effective).")))
-                                # ))),
-                                # numericInput("Malpha", "Number of simulations", value = 100),
-                                # bsTooltip("Malpha", "Number of Monte Carlo simulations to estimate the type I error rate.",
-                                #           "right", options = list(container = "body")),
-                                # checkboxInput("tlimita", "Set a limit for run time"),
-                                # conditionalPanel(
-                                #   condition = "input.tlimita == true",
-                                #   numericInput("Talpha", "Maximum permitted run time in seconds", value = NULL),
-                                #   bsTooltip("Talpha", "The simulation is terminated if run time exceeds this limit.",
-                                #             "right", options = list(container = "body"))),
-                                
-                                #actionButton("button01", "Compute"),
                                 br(),
                                 DT::dataTableOutput("alpha")
                        ),

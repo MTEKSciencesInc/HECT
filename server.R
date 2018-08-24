@@ -156,41 +156,6 @@ shinyServer(function(input, output, session) {
     
   })
   
-  # power_calc = eventReactive(input$button2, {
-  #   adh0 = paste('adh', 1:input$nt, sep = '')
-  #   adh = c()
-  #   for (i in 1:input$nt) adh[i] = as.numeric(input[[adh0[i]]])
-  #   eff0 = paste('eff', 1:input$nt, sep = '')
-  #   eff = c()
-  #   for (i in 1:input$nt) eff[i] = as.numeric(input[[eff0[i]]])
-  # 
-  #   #withProgress(message = 'Estimating power', value = 0, max = input$M, {
-  # 
-  #   withTimeout({power_compute(nt = input$nt, theta0 = eff, nb = input$batchsize , maxN = input$max, N = 1000,
-  #                              upper = input$upthresh, lower = input$lowthresh, burn = input$burnin,
-  #                              response.type = input$efftype, conjugate_prior = T,
-  #                              padhere = adh , adapt = input$adapt, con = input$con, M = input$M)},
-  #               timeout = ifelse(!is.null(input$Tpower), input$Tpower, Inf), onTimeout = 'silent')
-  # 
-  #   #}) # END withProgress
-  # 
-  # }) # END power_calc
-  # 
-  # alpha_calc = eventReactive(input$button2, {
-  # 
-  #   #withProgress(message = 'Estimating type I error', value = 0, max = input$Malpha, {
-  # 
-  #   withTimeout({alpha_compute(nt = input$nt, nb = input$batchsize , maxN = input$max, N = 1000,
-  #                 upper = input$upthresh, lower = input$lowthresh, burn = input$burnin,
-  #                 response.type = 'absolute', conjugate_prior = T, padhere = rep(1, input$nt),
-  #                 adapt = input$adapt,
-  #                 con = input$con,
-  #                 M = input$Malpha)},
-  #               timeout = ifelse(!is.null(input$Talpha), input$Talpha, 1000000), onTimeout = 'silent')
-  #   #}) # END with Progress
-  # 
-  # }) # END alpha_calc
-  
   power_calc_RCT = eventReactive(input$compRCT, {
     adh0 = paste('adh', 1:input$nt, sep = '')
     adh = c()
@@ -205,14 +170,11 @@ shinyServer(function(input, output, session) {
       upthreshold <- input$upthreshF
     }
     
-    #withProgress(message = 'Calculating power', value = 0, {
     withTimeout({power_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
                                upper = upthreshold,
                                response.type = input$efftype, conjugate_prior = T,
                                padhere = adh , compCon = input$compCon, M = input$M)}, 
                 timeout = ifelse(!is.null(input$Tpower), input$Tpower, Inf), onTimeout = 'silent')
-    #}) # END withProgress
-
     
   })
   
@@ -557,9 +519,17 @@ shinyServer(function(input, output, session) {
     power_alpha0 <- power_alpha_calc()
     p0 = power_alpha0$power_out #power_calc()
     
-    # if (is.null(p0)) {
-    #       HTML(paste('<br/>'), paste("<pre>","<font color=\"#FF0000\"><b>",'Power calculation terminated: run time exceeded the maximum permitted time by user.', "</b></font>"))
-    #     }
+    if (is.null(p0)) {
+      d0 <- data.frame(power = "Calculation terminated: run time exceeded the maximum permitted time by user.")
+      colnames(d0) = "Error:"
+      row.names(d0) = ""
+      return(datatable(d0, rownames = T, escape = FALSE,
+                options = list(bLengthChange=0,                       # show/hide records per page dropdown
+                               bFilter=0,                             # global search box on/off
+                               bInfo=0,
+                               bPaginate=0,
+                               bSort=0)))
+        }
     
     if (!is.null(p0)) {
       pow0 = c()
@@ -595,33 +565,22 @@ shinyServer(function(input, output, session) {
     
   })
   
-  # 
-  # 
-  # 
-  # output$power <- renderUI({
-  #   # if(isValid_num0() | (input$efftype == 'absolute' & isValid_na0())){
-  #   #   closeAlert(session, 'Alert0')
-  #   #
-  #   # } else {
-  #   #   createAlert(session, "alert0", "Alert0", title = "Invalid Entry",
-  #   #               content = "Proportions must be between 0 and 1.", append = FALSE)
-  #   # }
-  #   power_alpha0 <- power_alpha_calc()
-  #   p0 = power_alpha0$power_out #power_calc()
-  #   if (is.null(p0)) {
-  #     HTML(paste('<br/>'), paste("<pre>","<font color=\"#FF0000\"><b>",'Power calculation terminated: run time exceeded the maximum permitted time by user.', "</b></font>"))
-  #   } else {
-  #     if (round(p0$power, 2) >= 0.8) {
-  #       HTML(paste('<br/>'), paste("<pre>",'Estimated power:', "<font color=\"#1b7c45\"><b>",round(p0$power, 2), "</b></font>"))
-  #     }
-  #     else HTML(paste('<br/>'), paste("<pre>",'Estimated power:', "<font color=\"#FF0000\"><b>",round(p0$power, 2), "</b></font>"))
-  #   }
-  # 
-  # })
   
   output$alpha <- DT::renderDataTable({
     power_alpha0 <- power_alpha_calc()
     p0 = power_alpha0$alpha_out #power_calc()
+    
+    if (is.null(p0)) {
+      d0 <- data.frame(power = "Calculation terminated: run time exceeded the maximum permitted time by user.")
+      colnames(d0) = "Error:"
+      row.names(d0) = ""
+      return(datatable(d0, rownames = T, escape = FALSE,
+                       options = list(bLengthChange=0,                       # show/hide records per page dropdown
+                                      bFilter=0,                             # global search box on/off
+                                      bInfo=0,
+                                      bPaginate=0,
+                                      bSort=0)))
+    }
     
     if (!is.null(p0)) {
       a0 = c()
