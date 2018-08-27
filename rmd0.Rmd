@@ -57,7 +57,12 @@ where $\mathbf{x}_{1:n}$ and $y_{1:n}$ are the "observed" assignment vectors and
 To incorporate the adherence rate into the data generating process, if the $l^{\text{th}}$ component of $\mathbf{x}_n$ is 1, it is set to zero with probability $\lambda_l$, where $\lambda_l$ is the adherence rate for arm $l$. Note that adherence is considered "unobservable", i.e., it is incorporated into the data generative model but not in the analysis model explained below.
 
 #### Analysis model -- Bayesian updates
-The interim Bayesian updates required for adaptation, are performed as follows:
+Each $\theta_l$ is analysed ``seperately'' in the sense that for each posterior distribution of $\theta_l$, only the relevant data for the $l$th arm is used. That is, define
+
+* $y_{n_i:n_j,l}$: the responses from the group of $n_i$ to $n_j$ patients that were assigned the $l$th arm; all responses are assumed to be independent of one another.
+* $n_{j,l}$: the number of patients out of $n_j$ total patients assigned to the $l$th arm (i.e, $\sum_{l=1}^{L}n_{j,l} = n_j$).
+
+The interim Bayesian updates required for adaptation are performed as follows:
 
 For continuous $\theta_l$, a diffuse normal prior is used,
 $$\theta_l \sim \mathcal{N}(0,10).$$
@@ -66,9 +71,9 @@ $$\theta_l \mid \mathbf{x}_{1:n_1}, y_{1:n_1}\sim \mathcal{N}(\mu_1, \sigma_1^2)
 The updated posterior according to $n_2$ new patients with assignment vectors $\mathbf{x}_{n_1:n_2}$ and outcomes $y_{n_1:n_2}$, is given by
 $$\theta_l \mid \mathbf{x}_{1:(n_1+n_2)}, y_{1:(n_1+n_2)}\sim \mathcal{N}(\mu_2, \sigma_2^2),$$
 where 
-$$\sigma^2_2 = \frac{1}{n_2 + \frac{1}{\sigma_1^2}};$$
+$$\sigma^2_2 = \frac{1}{n_{2,l} + \frac{1}{\sigma_1^2}};$$
 and 
-$$\mu_2 = \sigma_2^2 \left(\frac{\mu_1}{\sigma^2_1}+n_2\bar{y}_{n_1:n_2,l}\right),$$
+$$\mu_2 = \sigma_2^2 \left(\frac{\mu_1}{\sigma^2_1}+n_{2,l}\bar{y}_{n_1:n_2,l}\right),$$
 where $\bar{y}_{n_1:n_2,l}$ is the mean response for patients who were assigned to arm $l$ among the new $n_2$ patients.
 
 For rate type $\theta_l$,
@@ -76,8 +81,8 @@ $$\theta_l \sim Beta(1,1).$$
 The posterior is obtained as follows; suppose that the posterior distribution of $\theta_l$ given the first $n_1$ patient data is,
 $$\theta_l \mid \mathbf{x}_{1:n_1}, y_{1:n_1}\sim Beta(a_1, b_1).$$
 The updated posterior according to $n_2$ new patients with assignment vectors $\mathbf{x}_{n_1:n_2}$ and outcomes $y_{n_1:n_2}$, is given by
-$$\theta_l \mid \mathbf{x}_{1:(n_1+n_2)}, y_{1:(n_1+n_2)}\sim Beta(a_1 + y_{n_1:n_2,l}, b_1 + n_2 - y_{n_1:n_2,l}),$$
-where $y_{n_1:n_2,l}$ is the number of successes in arm $l$ among the new $n_2$ patients.
+$$\theta_l \mid \mathbf{x}_{1:(n_1+n_2)}, y_{1:(n_1+n_2)}\sim Beta(a_1 + n_{2,l}\bar{y}_{n_1:n_2,l}, b_1 + n_{2,l} - n_{2,l}\bar{y}_{n_1:n_2,l}),$$
+where $n_{2,l}\bar{y}_{n_1:n_2,l}$ is the total number of successes in arm $l$ among the new $n_2$ patients.
 
 The posterior probability of an arm being superior after $n$ patients are enrolled in the trial is then given as the expectation of $\mathbf{1}(\theta_l= \max(\theta_1, \ldots, \theta_L))$ with respect to the posterior $\pi(\theta_l \mid \mathbf{x}_{1:n}, y_{1:n})$,
 $$P\left(\theta_l= \max(\theta_1, \ldots, \theta_L) \mid \mathbf{x}_{1:n}, y_{1:n}\right) = \int \mathbf{1}(\theta_l= \max(\theta_1, \ldots, \theta_L))\pi(\theta_l \mid \mathbf{x}_{1:n}, y_{1:n})d\theta_l,$$
