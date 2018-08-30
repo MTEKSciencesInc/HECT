@@ -77,7 +77,7 @@ psup = function(trial) {
   np = dim(psup)[2]
   psup = psup[,np]
   out = data.frame(psup)
-  names(out) = c("Probability of Superiority")
+  names(out) = c("Probability of superiority")
   row.names(out) = paste("treatment", 1:nt)
   return(out)
 }
