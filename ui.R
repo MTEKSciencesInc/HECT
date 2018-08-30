@@ -25,7 +25,7 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                sidebarPanel(
                  
                  div(style="display: inline-block;vertical-align:top; ", 
-                     numericInput("nt", "Number of treatments:", value = 3)),
+                     numericInput("nt", "Number of treatments:", value = 3, min = 2, max = 10)),
                  div(style="", radioButtons("efftype", "Primary outcome type", 
                                             c('Continuous' = "absolute",
                                               "Proportion (between 0 and 1)" = "rate"),
@@ -96,25 +96,25 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                  
                  div(style="display: inline-block;",
                      numericInput("burnin", "Burn-in sample size:",
-                                  width = "270px", value = 30)),
+                                  width = "270px", value = 100, min = 10)),
                  bsTooltip("burnin", "This is the number of patients that need to be enrolled into the trial before adaptation begins.",
                            "right", options = list(container = "body")),
                  
                  div(style="display: inline-block;",
                      numericInput("batchsize", "Sample size between two interim looks:",
-                                  width = "270px", value = 20)),
+                                  width = "270px", value = 100, min = 1)),
                  bsTooltip("batchsize", "This is the number of patients enrolled into the trial between two adaptations. If this number is small adaptations are performed more frequently resulting in more computation and increasing simulation time.",
                            "right", options = list(container = "body")),
                  
                  div(style="display: inline-block;",
                      numericInput("max", "Maximum total sample size:",
-                                  width = "270px", value = 500)),
+                                  width = "270px", value = 500, min = 10)),
                  bsTooltip("max", "If the total number of patients enrolled into the trial reaches this number, the trial will be terminated.",
                            "right", options = list(container = "body")),
                  
                  div(style="display: inline-block;",
                      numericInput("ec", "Enrollment cost per patient ($):",
-                                  width = "270px", value = 0))
+                                  width = "270px", value = 0, min = 0))
                ),
                
                mainPanel(
@@ -197,10 +197,10 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                        ),
                        tabPanel("Comparison with RCT",
                                 br(),
-                                div(actionButton("compRCT", "Run", 
-                                                 style="padding:4px; font-size:100%;
-                                                 color:#FFF; background-color: #0095ff; border-color:#07c")),
-                                
+                                # div(actionButton("compRCT", "Run", 
+                                #                  style="padding:4px; font-size:100%;
+                                #                  color:#FFF; background-color: #0095ff; border-color:#07c")),
+                                #textOutput('test'),
                                 plotOutput("HECTvsBRCTplot"),
                                 br()
                                 #,

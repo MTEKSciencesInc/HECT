@@ -134,7 +134,7 @@ shinyServer(function(input, output, session) {
       upthreshold <- input$upthreshF
     }
     
-    withProgress(message = 'Estimating power and type I error', value = 0, max = 2*input$M, {
+    withProgress(message = 'Estimating power and type I error', value = 0, max = 4*input$M, {
     
     power_out <- withTimeout({power_compute(nt = input$nt, theta0 = eff, 
                                             nb = input$batchsize, maxN = input$max, N = 1000,
@@ -153,54 +153,68 @@ shinyServer(function(input, output, session) {
                                M = input$M)},
                 timeout = ifelse(!is.null(input$Tpower), input$Tpower, 1000000), onTimeout = 'silent')
     
+    power_RCT_out <- withTimeout({power_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
+                                   upper = upthreshold,
+                                   response.type = input$efftype, conjugate_prior = T,
+                                   padhere = adh , compCon = input$compCon, M = input$M)}, 
+                timeout = ifelse(!is.null(input$Tpower), input$Tpower, Inf), onTimeout = 'silent')
+    
+    alpha_RCT_out <-     withTimeout({alpha_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
+                                                        upper = upthreshold, 
+                                                        response.type = input$efftype, conjugate_prior = T, compCon = input$compCon, 
+                                                        M = input$M)}, 
+                                     timeout = ifelse(!is.null(input$Tpower), input$Tpower, 1000000), onTimeout = 'silent')
+    
     }) # END withProgress    
     
     return(list(power_out = power_out, 
-                alpha_out = alpha_out))
+                alpha_out = alpha_out, 
+                power_RCT_out = power_RCT_out, 
+                alpha_RCT_out = alpha_RCT_out))
     
   })
   
-  power_calc_RCT = eventReactive(input$compRCT, {
-    adh0 = paste('adh', 1:input$nt, sep = '')
-    adh = c()
-    for (i in 1:input$nt) adh[i] = as.numeric(input[[adh0[i]]])
-    eff0 = paste('eff', 1:input$nt, sep = '')
-    eff = c()
-    for (i in 1:input$nt) eff[i] = as.numeric(input[[eff0[i]]])
-    
-    if (input$compCon == "TRUE") {
-      upthreshold <- input$upthreshT
-    } else {
-      upthreshold <- input$upthreshF
-    }
-    
-    withTimeout({power_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
-                               upper = upthreshold,
-                               response.type = input$efftype, conjugate_prior = T,
-                               padhere = adh , compCon = input$compCon, M = input$M)}, 
-                timeout = ifelse(!is.null(input$Tpower), input$Tpower, Inf), onTimeout = 'silent')
-    
-  })
-  
-  alpha_calc_RCT = eventReactive(input$compRCT, {
-    
-    eff0 = paste('eff', 1:input$nt, sep = '')
-    eff = c()
-    for (i in 1:input$nt) eff[i] = as.numeric(input[[eff0[i]]])
-    
-    if (input$compCon == "TRUE") {
-      upthreshold <- input$upthreshT
-    } else {
-      upthreshold <- input$upthreshF
-    }
-    
-    withTimeout({alpha_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
-                               upper = upthreshold, 
-                               response.type = input$efftype, conjugate_prior = T, compCon = input$compCon, 
-                               M = input$M)}, 
-                timeout = ifelse(!is.null(input$Tpower), input$Tpower, 1000000), onTimeout = 'silent')
-  })
-
+  # power_calc_RCT = eventReactive(input$compRCT, {
+  #   adh0 = paste('adh', 1:input$nt, sep = '')
+  #   adh = c()
+  #   for (i in 1:input$nt) adh[i] = as.numeric(input[[adh0[i]]])
+  #   eff0 = paste('eff', 1:input$nt, sep = '')
+  #   eff = c()
+  #   for (i in 1:input$nt) eff[i] = as.numeric(input[[eff0[i]]])
+  #   
+  #   if (input$compCon == "TRUE") {
+  #     upthreshold <- input$upthreshT
+  #   } else {
+  #     upthreshold <- input$upthreshF
+  #   }
+  #   
+  #   withTimeout({power_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
+  #                              upper = upthreshold,
+  #                              response.type = input$efftype, conjugate_prior = T,
+  #                              padhere = adh , compCon = input$compCon, M = input$M)}, 
+  #               timeout = ifelse(!is.null(input$Tpower), input$Tpower, Inf), onTimeout = 'silent')
+  #   
+  # })
+  # 
+  # alpha_calc_RCT = eventReactive(input$compRCT, {
+  #   
+  #   eff0 = paste('eff', 1:input$nt, sep = '')
+  #   eff = c()
+  #   for (i in 1:input$nt) eff[i] = as.numeric(input[[eff0[i]]])
+  #   
+  #   if (input$compCon == "TRUE") {
+  #     upthreshold <- input$upthreshT
+  #   } else {
+  #     upthreshold <- input$upthreshF
+  #   }
+  #   
+  #   withTimeout({alpha_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
+  #                              upper = upthreshold, 
+  #                              response.type = input$efftype, conjugate_prior = T, compCon = input$compCon, 
+  #                              M = input$M)}, 
+  #               timeout = ifelse(!is.null(input$Tpower), input$Tpower, 1000000), onTimeout = 'silent')
+  # })
+  # 
 
   isValid_num0 <- eventReactive(input$button, {
     eff0 = paste('eff', 1:input$nt, sep = '')
@@ -524,6 +538,8 @@ shinyServer(function(input, output, session) {
   
   
   output$power <- DT::renderDataTable({
+    input$button2
+    compCon = isolate(input$compCon)
     power_alpha0 <- power_alpha_calc()
     p0 = power_alpha0$power_out #power_calc()
     
@@ -547,7 +563,7 @@ shinyServer(function(input, output, session) {
             pow0[i] = paste("<font color=\"#FF0000\"><b>",round(p0$power[i], 2), "</b></font>")
       }
       d0 = t(data.frame(power = pow0))
-      if (input$compCon == T) {
+      if (compCon == T) {
         colnames(d0) = paste('Treatment', 2:input$nt)
         row.names(d0) = "<b>Power</b>"
         datatable(d0, rownames = T, escape = FALSE,
@@ -575,9 +591,10 @@ shinyServer(function(input, output, session) {
   
   
   output$alpha <- DT::renderDataTable({
+    input$button2
+    compCon = isolate(input$compCon)
     power_alpha0 <- power_alpha_calc()
     p0 = power_alpha0$alpha_out #power_calc()
-    
     if (is.null(p0)) {
       d0 <- data.frame(power = "Calculation terminated: run time exceeded the maximum permitted time by user.")
       colnames(d0) = "Error:"
@@ -598,7 +615,7 @@ shinyServer(function(input, output, session) {
             a0[i] = paste("<font color=\"#FF0000\"><b>",round(p0$alpha[i], 2), "</b></font>")
       }
       d0 = t(data.frame(alpha = a0))
-      if (input$compCon == T) {
+      if (compCon == T) {
         colnames(d0) = paste('Treatment', 2:input$nt)
         row.names(d0) = "<b>Type I error rate</b>"
         datatable(d0, rownames = T, escape = FALSE,
@@ -834,18 +851,20 @@ shinyServer(function(input, output, session) {
   })
   
   output$HECTvsBRCTplot <- renderPlot({
+    input$button2
     power_alpha0 <- power_alpha_calc()
     p0 = power_alpha0$power_out #power_calc()
     a0 = power_alpha0$alpha_out #alpha_calc()
     if(!is.null(a0)) al0 = a0$alpha else al0 =  NULL
     if(!is.null(a0)) pow0 = p0$power else pow0 =  NULL
     d0 = ifelse(!is.null(p0), mean(p0$Nt * input$ec), NULL)
-    al1 = alpha_calc_RCT()
-    pow1 = power_calc_RCT()
+    al1 = power_alpha0$alpha_RCT_out
+    pow1 = power_alpha0$power_RCT_out
     d1 = input$max * input$ec
+    compCon = isolate(input$compCon)
     HECTvsBRCTPlot(a0 = al0, a1 = al1,
                    p0 = pow0, p1 = pow1, 
-                   c0 = d0, c1 = d1)
+                   c0 = d0, c1 = d1, compCon = compCon)
     
   })
   
@@ -856,10 +875,10 @@ shinyServer(function(input, output, session) {
     if(!is.null(a0)) al0 = a0$alpha else al0 =  NULL
     if(!is.null(a0)) pow0 = p0$power else pow0 =  NULL
     d0 = ifelse(!is.null(p0), mean(p0$Nt * input$ec), NULL)
-    al1 = alpha_calc_RCT()
-    pow1 = power_calc_RCT()
+    al1 = power_alpha0$alpha_RCT_out
+    pow1 = power_alpha0$power_RCT_out
     d1 = input$max * input$ec
-    pow0
+    al1
     
   })
   
