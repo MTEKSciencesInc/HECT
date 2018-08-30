@@ -858,7 +858,7 @@ AE_sim = function(trial,nt, theta_ae, response.type) {
 #'
 #' @export
 sim_wrapper_RCT = function(i, nt, theta0, maxN = 500, N = 1000, upper = 0.95,
-                           response.type, conjugate_prior = T, padhere = rep(1,nt)) {
+                           response.type, conjugate_prior = T, padhere = rep(1,nt), compCon = F) {
   ng = maxN
   nb = maxN
   j = 0
@@ -907,7 +907,8 @@ sim_wrapper_RCT = function(i, nt, theta0, maxN = 500, N = 1000, upper = 0.95,
   pow = sum(pbin[which.max(theta0)] == 1)
   pow1 = ifelse(cpsupp > upper, 1, 0)
   alpha = sum(sum(pbin) == 1)
-  out = list(power = pow, power1 = pow1, alpha = alpha)
+  if (compCon == T) power = pow1 else power = pow
+  out = list(power = power, alpha = alpha)
   return(out)
 }
 
@@ -922,8 +923,9 @@ power_compute_RCT = function(nt, theta0, maxN = 500, N = 1000, upper = 0.95, res
                              conjugate_prior = T, padhere = rep(1, nt), compCon = F, M = 500) {
   df = data.frame(t(sapply(1:M, sim_wrapper_RCT, nt = nt, theta0 = theta0, maxN = maxN,
                            N = N, upper = upper, response.type = response.type,
-                           conjugate_prior = conjugate_prior, padhere = padhere, simplify = T)))
-  if (compCon == T) power = apply(do.call(rbind, df$power1), 2, mean) else power = mean(unlist(df$power))
+                           conjugate_prior = conjugate_prior, padhere = padhere, compCon = compCon,
+                           simplify = T)))
+  if (compCon == T & length(df$power[[1]])>1) power = apply(do.call(rbind, df$power), 2, mean) else power = mean(unlist(df$power))
   return(power)
 }
 
@@ -940,7 +942,8 @@ alpha_compute_RCT = function(nt, theta0, maxN = 500, N = 1000, upper = 0.95, res
   if (response.type == 'rate') theta0 = rep(mean(theta0), nt)
   df = data.frame(t(sapply(1:M, sim_wrapper_RCT, nt = nt, theta0 = theta0, maxN = maxN,
                            N = N, upper = upper, response.type = response.type,
-                           conjugate_prior = conjugate_prior, simplify = T)))
-  if (compCon == T) alpha = apply(do.call(rbind, df$power1), 2, mean) else alpha = mean(unlist(df$alpha))
+                           conjugate_prior = conjugate_prior, compCon = compCon, simplify = T)))
+  if (compCon == T & length(df$power[[1]])>1) 
+    alpha = apply(do.call(rbind, df$power), 2, mean) else alpha = mean(unlist(df$alpha))
   return(alpha)
 }

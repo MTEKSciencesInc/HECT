@@ -194,9 +194,9 @@ designPlot = function(trial) {
 #' @return Comparison plots
 #' @export
 
-HECTvsBRCTPlot = function(a0, a1, p0, p1, c0, c1) {
+HECTvsBRCTPlot = function(a0, a1, p0, p1, c0, c1, compCon) {
   dfc = data.frame(cost = c(c0, c1), design = c('HECT', 'BRCT'))
-  if (length(a0)>1) {
+  if (compCon == T) {
     nt0 = length(a0)
     df = data.frame(alpha = c(a0, a1), power = c(p0, p1), 
                     design = c(rep('HECT', nt0) , rep('BRCT', nt0)), 
