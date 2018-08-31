@@ -236,7 +236,7 @@ shinyServer(function(input, output, session) {
   isValid_num1 <- eventReactive(input$button,{
     eff0 = paste('effso', 1:input$nt, sep = '')
     eff = c()
-    for (i in 1:input$nt) eff[i] = as.numeric(input[[eff0[i]]])
+    for (i in 1:input$nt) eff[i] = ifelse(is.null(input[[eff0[i]]]), NA, as.numeric(input[[eff0[i]]]))
     sum(eff>=0) == input$nt && sum(eff<=1) == input$nt && sum(!is.na(eff)) == input$nt
   })
 
@@ -260,7 +260,7 @@ shinyServer(function(input, output, session) {
   isValid_na1 <- eventReactive(input$button,{
     eff0 = paste('effso', 1:input$nt, sep = '')
     eff = c()
-    for (i in 1:input$nt) eff[i] = as.numeric(input[[eff0[i]]])
+    for (i in 1:input$nt) eff[i] = ifelse(is.null(input[[eff0[i]]]), NA, as.numeric(input[[eff0[i]]]))
     sum(!is.na(eff)) == input$nt
   })
 
