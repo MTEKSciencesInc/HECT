@@ -1,9 +1,6 @@
 Note that some screenshots in the folder are errors/strange behaviour whose exact trigger have yet to be pinpointed.
 
 # Errors/changes
-1. Secondary analysis (see screenshot)
-- "Error: replacement has length zero" shows up near the bottom of the page
-- Having trouble identifying exactly when this can happen
 
 # Possible UI changes 
 1. Single Trial Simulation -> Data
