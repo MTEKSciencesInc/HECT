@@ -14,20 +14,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 BRATS is an application designed to explore the various features and utilities of Bayesian Response Adaptive Randomized (BRAR) trial designs. For a given set of design components, specified by the user, data can be generated for a single BRAR trial with an embedded Bayesian analysis. Single trial simulation provides a better understanding of the progression of the trial with the adaptive component under different scenarios. In addition, under the `Trial design properties` tab, performing simulatin studies is enhanced to investigate statistical properties including power and type I error rate. BRATS is designed as accessible as possible to non-statisticians such that an intuitive understanding of the adaptive design is enough to use the application for clinical trial planning. However, a detailed description of the underlying assumptions and statistical models is provided in the following.
 
-
-### Sample Size Calculation
-In the `Sample Size Calculation` tab, per-arm and total sample sizes can be calculated for a conventional multi-arm RCT. The goal is to obtain the required sample size to estimate the difference between the largest and second largest of the effects for a given statistical power, type I error rate and drop-out rate. The rational is that in a multi-arm trial, the trial needs to be powered to detect the smallest difference between the largest of the effects and the rest.
-
-If continuous response type is selected, variances need to be provided. The sample size (per arm) is then given by 
-$$n_a = \left\lceil\frac{(\sigma^2_1 + \sigma^2_2)(Z_{1-\alpha/2}+Z_{1-\beta})^2}{\delta^2(1-r)} \right\rceil $$
-where $\delta$ is the difference between the largest effect size and the second largest effect size; $\sigma^2_1$ and $\sigma^2_2$ are the corresponding variances; $\alpha$ is the type I error rate and $\beta$ is $(1-\text{power})$; and $r$ is the dropout rate. 
-
-If proportion response type is selected, the sample size (per arm) is given by 
-$$n_a = \left\lceil\frac{(p_1(1-p_1) + p_2(1-p_2))(Z_{1-\alpha/2}+Z_{1-\beta})^2}{(p_1 - p_2)^2(1-r)} \right\rceil $$
-where $p_1$ and $p_2$ are the probabilities of success for the best and second best treatments.
-
-The total sample size is simply calculated by multiplying the per-arm sample size by the number of trial arms.
-
 ### Trial Simulation
 
 #### Bayesian response adaptive randomized design
@@ -120,6 +106,19 @@ where the subscript $m$ shows that the estimate was obtained from the data simul
 $$\hat{E}(SS) = \sum_{m = 1}^M(n_{\max} - n_T^m).$$
 **Type I error rate:** Type I error rate is defined as the probability of concluding that one of the treatments is superior under the assumption that none of the treatments are effective. Type I error rate is estimated as,
 $$\hat{P}\left(\exists l\hskip5pt \text{s.t.}\hskip5pt P\left(\theta_{l}= \max(\theta_1, \ldots, \theta_L) \right)>U \mid \theta_l = 0\hskip5pt \forall l\right) = \frac{1}{M}\sum_{m = 1}^{M}\mathbf{1}\left(\exists l\hskip5pt \text{s.t.}\hskip5pt P\left(\theta_{l}= \max(\theta_1, \ldots, \theta_L) \right)>U \mid \theta_l = 0\hskip5pt \forall l\right).$$  
+
+### Sample Size Calculation
+In the `Sample Size Calculation` tab, per-arm and total sample sizes can be calculated for a conventional multi-arm RCT. The goal is to obtain the required sample size to estimate the difference between the largest and second largest of the effects for a given statistical power, type I error rate and drop-out rate. The rational is that in a multi-arm trial, the trial needs to be powered to detect the smallest difference between the largest of the effects and the rest.
+
+If continuous response type is selected, variances need to be provided. The sample size (per arm) is then given by 
+$$n_a = \left\lceil\frac{(\sigma^2_1 + \sigma^2_2)(Z_{1-\alpha/2}+Z_{1-\beta})^2}{\delta^2(1-r)} \right\rceil $$
+where $\delta$ is the difference between the largest effect size and the second largest effect size; $\sigma^2_1$ and $\sigma^2_2$ are the corresponding variances; $\alpha$ is the type I error rate and $\beta$ is $(1-\text{power})$; and $r$ is the dropout rate. 
+
+If proportion response type is selected, the sample size (per arm) is given by 
+$$n_a = \left\lceil\frac{(p_1(1-p_1) + p_2(1-p_2))(Z_{1-\alpha/2}+Z_{1-\beta})^2}{(p_1 - p_2)^2(1-r)} \right\rceil $$
+where $p_1$ and $p_2$ are the probabilities of success for the best and second best treatments.
+
+The total sample size is simply calculated by multiplying the per-arm sample size by the number of trial arms.
 
 ####Acknowledgements
 The development of this application was funded by the Bill & Melinda Gates Foundation.

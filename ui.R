@@ -279,7 +279,7 @@ shinyUI(fluidPage(#theme="bootstrap.css",
 
                  div(style="display: inline-block;vertical-align:top; ", numericInput("ntss", "Number of treatments:",
                                                                                       value = 3)),
-                 div(style="", radioButtons("efftypess", "Primary outcome Type", c('Continuous' = "absolute",
+                 div(style="", radioButtons("efftypess", "Primary outcome type", c('Continuous' = "absolute",
                                                                             #"OR" = "OR",
                                                                             "Proportion (between 0 and 1)" = "rate"),
                                             selected = "absolute")),
