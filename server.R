@@ -134,7 +134,7 @@ shinyServer(function(input, output, session) {
       upthreshold <- input$upthreshF
     }
     
-    withProgress(message = 'Estimating power and type I error', value = 0, max = 4*input$M, {
+    withProgress(message = 'Estimating power and type I error', value = 0, max = 2.25*input$M, {
     
     power_out <- withTimeout({power_compute(nt = input$nt, theta0 = eff, 
                                             nb = input$batchsize, maxN = input$max, N = 1000,

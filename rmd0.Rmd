@@ -1,9 +1,9 @@
 ---
 title: "Bayesian Response Adaptive Trial Simulator - BRATS"
-author: |
-  | Shirin Golchi 
-  | MTEK Sciences Inc.
-output: html_document
+author: "| Shirin Golchi \n| MTEK Sciences Inc.\n"
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -13,20 +13,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Summary
 
 BRATS is an application designed to explore the various features and utilities of Bayesian Response Adaptive Randomized (BRAR) trial designs. For a given set of design components, specified by the user, data can be generated for a single BRAR trial with an embedded Bayesian analysis. Single trial simulation provides a better understanding of the progression of the trial with the adaptive component under different scenarios. In addition, under the `Trial design properties` tab, performing simulatin studies is enhanced to investigate statistical properties including power and type I error rate. BRATS is designed as accessible as possible to non-statisticians such that an intuitive understanding of the adaptive design is enough to use the application for clinical trial planning. However, a detailed description of the underlying assumptions and statistical models is provided in the following.
-
-
-### Sample Size Calculation
-In the `Sample Size Calculation` tab, per-arm and total sample sizes can be calculated for a conventional multi-arm RCT. The goal is to obtain the required sample size to estimate the difference between the largest and second largest of the effects for a given statistical power, type I error rate and drop-out rate. The rational is that in a multi-arm trial, the trial needs to be powered to detect the smallest difference between the largest of the effects and the rest.
-
-If continuous response type is selected, variances need to be provided. The sample size (per arm) is then given by 
-$$n_a = \left\lceil\frac{(\sigma^2_1 + \sigma^2_2)(Z_{1-\alpha/2}+Z_{1-\beta})^2}{\delta^2(1-r)} \right\rceil $$
-where $\delta$ is the difference between the largest effect size and the second largest effect size; $\sigma^2_1$ and $\sigma^2_2$ are the corresponding variances; $\alpha$ is the type I error rate and $\beta$ is $(1-\text{power})$; and $r$ is the dropout rate. 
-
-If proportion response type is selected, the sample size (per arm) is given by 
-$$n_a = \left\lceil\frac{(p_1(1-p_1) + p_2(1-p_2))(Z_{1-\alpha/2}+Z_{1-\beta})^2}{(p_1 - p_2)^2(1-r)} \right\rceil $$
-where $p_1$ and $p_2$ are the probabilities of success for the best and second best treatments.
-
-The total sample size is simply calculated by multiplying the per-arm sample size by the number of trial arms.
 
 ### Trial Simulation
 
@@ -55,6 +41,23 @@ $$\rho_l=\sqrt{P\left(\theta_l= \max(\theta_1, \ldots, \theta_L) \mid \mathbf{x}
 where $\mathbf{x}_{1:n}$ and $y_{1:n}$ are the "observed" assignment vectors and outcomes of the first $n$ patients enrolled in the trial. In the next section, we explain how $P\left(\theta_l= \max(\theta_1, \ldots, \theta_L) \mid \mathbf{x}_{1:n}, y_{1:n}\right)$ is estimated.
 
 To incorporate the adherence rate into the data generating process, if the $l^{\text{th}}$ component of $\mathbf{x}_n$ is 1, it is set to zero with probability $\lambda_l$, where $\lambda_l$ is the adherence rate for arm $l$. Note that adherence is considered "unobservable", i.e., it is incorporated into the data generative model but not in the analysis model explained below.
+
+#### Choosing the test hypotheses
+There are two comparison options available and thus two sets of hypotheses that may be tested:
+
+1. Compare all treatment arms simultaneously.
+
+     $H_0: \theta_i = \theta_j$ for all $i = j \in \left\{ 1, 2, ..., L \right\}$
+
+     $H_1:$  There exists $i, j$ such that $\theta_i \ne \theta_j$
+
+2. Compare each treatment arm against the reference treatment (Treatment 1).
+
+    For each $i = \left\{ 1, 2, ..., L \right\}$,
+
+     $H_0: \theta_1 = \theta_i$ 
+
+     $H_1: \theta_1 \ne \theta_i$
 
 #### Analysis model -- Bayesian updates
 Each $\theta_l$ is analysed ``seperately'' in the sense that for each posterior distribution of $\theta_l$, only the relevant data for the $l$th arm is used. That is, define
@@ -103,6 +106,19 @@ where the subscript $m$ shows that the estimate was obtained from the data simul
 $$\hat{E}(SS) = \sum_{m = 1}^M(n_{\max} - n_T^m).$$
 **Type I error rate:** Type I error rate is defined as the probability of concluding that one of the treatments is superior under the assumption that none of the treatments are effective. Type I error rate is estimated as,
 $$\hat{P}\left(\exists l\hskip5pt \text{s.t.}\hskip5pt P\left(\theta_{l}= \max(\theta_1, \ldots, \theta_L) \right)>U \mid \theta_l = 0\hskip5pt \forall l\right) = \frac{1}{M}\sum_{m = 1}^{M}\mathbf{1}\left(\exists l\hskip5pt \text{s.t.}\hskip5pt P\left(\theta_{l}= \max(\theta_1, \ldots, \theta_L) \right)>U \mid \theta_l = 0\hskip5pt \forall l\right).$$  
+
+### Sample Size Calculation
+In the `Sample Size Calculation` tab, per-arm and total sample sizes can be calculated for a conventional multi-arm RCT. The goal is to obtain the required sample size to estimate the difference between the largest and second largest of the effects for a given statistical power, type I error rate and drop-out rate. The rational is that in a multi-arm trial, the trial needs to be powered to detect the smallest difference between the largest of the effects and the rest.
+
+If continuous response type is selected, variances need to be provided. The sample size (per arm) is then given by 
+$$n_a = \left\lceil\frac{(\sigma^2_1 + \sigma^2_2)(Z_{1-\alpha/2}+Z_{1-\beta})^2}{\delta^2(1-r)} \right\rceil $$
+where $\delta$ is the difference between the largest effect size and the second largest effect size; $\sigma^2_1$ and $\sigma^2_2$ are the corresponding variances; $\alpha$ is the type I error rate and $\beta$ is $(1-\text{power})$; and $r$ is the dropout rate. 
+
+If proportion response type is selected, the sample size (per arm) is given by 
+$$n_a = \left\lceil\frac{(p_1(1-p_1) + p_2(1-p_2))(Z_{1-\alpha/2}+Z_{1-\beta})^2}{(p_1 - p_2)^2(1-r)} \right\rceil $$
+where $p_1$ and $p_2$ are the probabilities of success for the best and second best treatments.
+
+The total sample size is simply calculated by multiplying the per-arm sample size by the number of trial arms.
 
 ####Acknowledgements
 The development of this application was funded by the Bill & Melinda Gates Foundation.
