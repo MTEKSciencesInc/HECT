@@ -383,7 +383,7 @@ con_sup_check = function(theta) {
 #'
 #' @export
 
-RAR_sim = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppfut = 0.95, lower = .05,
+RAR_sim = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppfut = 0.95, lower = .01,
                    burn = 10*nt, response.type, conjugate_prior = T, padhere = rep(1,nt), adapt = T,
                    platf = T, compCon = F, MID = 0) {
   ng = nb
@@ -473,8 +473,10 @@ RAR_sim = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppf
         psup = abind(psup, psup[,j], along = 2)
       } else psup = abind(psup, apply(check, 2, mean), along = 2)
       ll = NULL
-      if (length(which(psup[,j+1] < lower))>0) ll = which(psup[,j+1] < lower)
-      if (!is.null(ll)) {
+      if (length(which(psup[,j+1] < lower))>0) {
+        ll = which(psup[,j+1] < lower)
+        }
+      if (length(ll[addarmlater[ll]<j]) != 0) {
         fut.stop = c(fut.stop, ll[addarmlater[ll]<j])
       }
       if (!is.null(fut.stop)) {
@@ -483,15 +485,11 @@ RAR_sim = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppf
       }
       ntj = length(which(addarmlater<=j & psup[,j+1]>0)) 
       if (sum(addarmlater==j)>0) ntj = ntj + sum(addarmlater==j)
+      prand = rep(0, nt)
       if (adapt == T & length(y)>=burn)  {
-        prand = rep(0, nt)
         prand[which(addarmlater<=j & psup[,j+1]>0)] = ((ntj - 1)/ntj)*sqrt(psup[which(addarmlater<=j & psup[,j+1]>0),j+1])
-        prand[which(addarmlater==j)] = 1/ntj
-      } else {
-        prand = rep(0, nt)
-        prand[which(addarmlater<=j & psup[,j+1]>0)] = 1/ntj
-        prand[which(addarmlater==j)] = 1/ntj
-      }
+      } else prand[which(addarmlater<=j & psup[,j+1]>0)] = 1/ntj
+      prand[which(addarmlater==j)] = 1/ntj
       
       
     } else {
@@ -656,7 +654,7 @@ sim_wrapper = function(i, nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.97
       } else psup = abind(psup, apply(check, 2, mean), along = 2)
       ll = NULL
       if (length(which(psup[,j+1] < lower))>0) ll = which(psup[,j+1] < lower)
-      if (!is.null(ll)) {
+      if (length(ll[addarmlater[ll]<j]) != 0) {
         fut.stop = c(fut.stop, ll[addarmlater[ll]<j])
       }
       if (!is.null(fut.stop)) {
