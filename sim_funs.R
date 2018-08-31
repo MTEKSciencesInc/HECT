@@ -502,7 +502,8 @@ RAR_sim = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppf
       if (length(y) < burn) {
         psup = abind(psup, psup[,j], along = 2)
       } else psup = abind(psup, apply(check, 2, mean), along = 2)
-      fmat = apply(theta[,which(prand>0),j+1], 1, con_fut_check, MID = MID)
+      if (response.type == 'absolute') fmat = apply(theta[,which(prand>0),j+1], 1, con_fut_check, MID = MID)
+      if (response.type == 'rate') fmat = apply(p_new[,which(prand>0)], 1, con_fut_check, MID = MID)
       if (is.null(dim(fmat))) fmat = matrix(fmat, N, length(which(prand>0)) - 1) else fmat = t(fmat)
       fcheck[,which(prand>0)] = cbind(rep(0, N), fmat)
       fcheck[,which(prand==0)] = 0
@@ -684,7 +685,8 @@ sim_wrapper = function(i, nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.97
       if (length(y) < burn) {
         psup = abind(psup, psup[,j], along = 2)
       } else psup = abind(psup, apply(check, 2, mean), along = 2)
-      fmat = apply(theta[,which(prand>0),j+1], 1, con_fut_check, MID = MID)
+      if (response.type == 'absolute') fmat = apply(theta[,which(prand>0),j+1], 1, con_fut_check, MID = MID)
+      if (response.type == 'rate') fmat = apply(p_new[,which(prand>0)], 1, con_fut_check, MID = MID)
       if (is.null(dim(fmat))) fmat = matrix(fmat, N, length(which(prand>0)) - 1) else fmat = t(fmat)
       fcheck[,which(prand>0)] = cbind(rep(0, N), fmat)
       fcheck[,which(prand==0)] = 0

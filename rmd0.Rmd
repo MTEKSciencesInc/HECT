@@ -1,9 +1,9 @@
 ---
-title: "Bayesian Response Adaptive Trial Simulator - BRATS"
-author: "| Shirin Golchi \n| MTEK Sciences Inc.\n"
+title: "Highly Efficient Clinial Trial simulator - HECT"
+author: "MTEK Sciences\n"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Summary
 
-BRATS is an application designed to explore the various features and utilities of Bayesian Response Adaptive Randomized (BRAR) trial designs. For a given set of design components, specified by the user, data can be generated for a single BRAR trial with an embedded Bayesian analysis. Single trial simulation provides a better understanding of the progression of the trial with the adaptive component under different scenarios. In addition, under the `Trial design properties` tab, performing simulatin studies is enhanced to investigate statistical properties including power and type I error rate. BRATS is designed as accessible as possible to non-statisticians such that an intuitive understanding of the adaptive design is enough to use the application for clinical trial planning. However, a detailed description of the underlying assumptions and statistical models is provided in the following.
+BRATS is an application designed to explore the various features and utilities of Bayesian Response Adaptive Randomized trial designs. For a given set of design components, specified by the user, data can be generated for a single BRAR trial with an embedded Bayesian analysis. Single trial simulation provides a better understanding of the progression of the trial with the adaptive component under different scenarios. In addition, under the `Trial design properties` tab, performing simulatin studies is enhanced to investigate statistical properties including power and type I error rate. HECT is designed as accessible as possible to non-statisticians such that an intuitive understanding of the adaptive design is enough to use the application for clinical trial planning. However, a detailed description of the underlying assumptions and statistical models is provided in the following.
 
 ### Trial Simulation
 
@@ -45,19 +45,14 @@ To incorporate the adherence rate into the data generating process, if the $l^{\
 #### Choosing the test hypotheses
 There are two comparison options available and thus two sets of hypotheses that may be tested:
 
-1. Compare all treatment arms simultaneously.
-
-     $H_0: \theta_i = \theta_j$ for all $i = j \in \left\{ 1, 2, ..., L \right\}$
-
-     $H_1:$  There exists $i, j$ such that $\theta_i \ne \theta_j$
-
+1. Compare all treatment arms simultaneously:
+     $$H_0:\theta_i=\theta_j\; \text{for all}\; i,j \in \left\{ 1, 2, ..., L \right\},$$
+     $$H_1:\; \text{There exists}\; i, j\; \text{such that}\; \theta_i \ne \theta_j$$
+     
 2. Compare each treatment arm against the reference treatment (Treatment 1).
-
     For each $i = \left\{ 1, 2, ..., L \right\}$,
-
-     $H_0: \theta_1 = \theta_i$ 
-
-     $H_1: \theta_1 \ne \theta_i$
+     $$H_0: \theta_1 = \theta_i$$ 
+     $$H_1: \theta_1 \ne \theta_i$$
 
 #### Analysis model -- Bayesian updates
 Each $\theta_l$ is analysed ``seperately'' in the sense that for each posterior distribution of $\theta_l$, only the relevant data for the $l$th arm is used. That is, define
