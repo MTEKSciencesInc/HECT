@@ -89,7 +89,7 @@ shinyServer(function(input, output, session) {
         upthreshold <- input$upthreshF
       }
       
-      RAR_sim(nt = input$nt, theta0 = eff, nb = input$batchsize, maxN = input$max, N = 1000,
+      RAR_sim(nt = input$nt, theta0 = eff, good.out = input$goodout, nb = input$batchsize, maxN = input$max, N = 1000,
               upper = upthreshold, uppfut = input$uppfut, lower = input$lowthresh,
               burn = input$burnin, response.type = input$efftype, conjugate_prior = T, padhere = adh, adapt = adp,
               platf = input$platf, compCon = input$compCon, MID = mid)
@@ -112,7 +112,7 @@ shinyServer(function(input, output, session) {
       if (input$efftypeso == "rate") {
         for (i in 1:input$nt) eff[i] = as.numeric(input[[eff0[i]]])
       }
-      AE_sim(trial, nt = input$nt, theta_ae = eff, response.type = input$efftypeso)
+      AE_sim(trial, nt = input$nt, theta_ae = eff, response.type = input$efftypeso, good.out = input$goodoutso)
     } else return()
 
   })
@@ -136,7 +136,7 @@ shinyServer(function(input, output, session) {
     
     withProgress(message = 'Estimating power and type I error', value = 0, max = 2.25*input$M, {
     
-    power_out <- withTimeout({power_compute(nt = input$nt, theta0 = eff, 
+    power_out <- withTimeout({power_compute(nt = input$nt, theta0 = eff, good.out = input$goodout,
                                             nb = input$batchsize, maxN = input$max, N = 1000,
                                upper = upthreshold, uppfut = input$uppfut, lower = input$lowthresh,
                                burn = input$burnin, response.type = input$efftype, 
@@ -144,7 +144,7 @@ shinyServer(function(input, output, session) {
                                platf = input$platf, compCon = input$compCon, MID = mid, M = input$M)},
                 timeout = ifelse(!is.null(input$Tpower), input$Tpower, Inf), onTimeout = 'silent')
     
-    alpha_out <- withTimeout({alpha_compute(nt = input$nt, theta0 = eff, 
+    alpha_out <- withTimeout({alpha_compute(nt = input$nt, theta0 = eff, good.out = input$goodout,
                                             nb = input$batchsize, maxN = input$max, N = 1000,
                                             upper = upthreshold, uppfut = input$uppfut, lower = input$lowthresh,
                                             burn = input$burnin, response.type = input$efftype, 
@@ -154,13 +154,13 @@ shinyServer(function(input, output, session) {
                 timeout = ifelse(!is.null(input$Tpower), input$Tpower, 1000000), onTimeout = 'silent')
     
     power_RCT_out <- withTimeout({power_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
-                                   upper = upthreshold,
+                                   upper = upthreshold, good.out = input$goodout,
                                    response.type = input$efftype, conjugate_prior = T,
                                    padhere = adh , compCon = input$compCon, M = input$M)}, 
                 timeout = ifelse(!is.null(input$Tpower), input$Tpower, Inf), onTimeout = 'silent')
     
     alpha_RCT_out <-     withTimeout({alpha_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
-                                                        upper = upthreshold, 
+                                                        upper = upthreshold, good.out = input$goodout,
                                                         response.type = input$efftype, conjugate_prior = T, compCon = input$compCon, 
                                                         M = input$M)}, 
                                      timeout = ifelse(!is.null(input$Tpower), input$Tpower, 1000000), onTimeout = 'silent')
@@ -287,6 +287,9 @@ shinyServer(function(input, output, session) {
       min0 = -Inf
       max0 = Inf
       value0 = 0
+      inp = selectInput("goodout", "Effect direction:",
+                        c('Increasing is favourable' = "TRUE",
+                          'Increasing is unfavourable' = "FALSE"))
     }
     if (typ == "rate") {
       typ  = "Proportion"
@@ -294,6 +297,9 @@ shinyServer(function(input, output, session) {
       min0 = 0
       max0 = 1
       value0 = 0.5
+      inp = selectInput("goodout", "Effect direction:",
+                  c('Event is favourable' = "TRUE",
+                    'Event is unfavourable' = "FALSE"))
     }
     if (typ == "count") {
       typ  = "Count"
@@ -305,7 +311,8 @@ shinyServer(function(input, output, session) {
     
       cid = paste('eff', 1, sep = '')
       c1 = paste(typ, "for Treatment 1 (Reference)")
-      list(div(style="display: inline-block; ", numericInput(cid, c1, step = step0 , min = min0, max = max0, value = value0, width = '100%')),
+      list(inp,
+        div(style="display: inline-block; ", numericInput(cid, c1, step = step0 , min = min0, max = max0, value = value0, width = '100%')),
       lapply(1:(numT-1), function(i) {
         div(style="", numericInput(paste('eff', i + 1, sep = ''), paste(typ, "for Treatment", i+1),
                                                                              step = step0 , min = min0, max = max0, value = value0, width = '100%'))
@@ -379,6 +386,9 @@ shinyServer(function(input, output, session) {
       min0 = -Inf
       max0 = Inf
       value0 = 0
+      inp = selectInput("goodoutso", "Effect direction:",
+                        c('Increasing is favourable' = "TRUE",
+                          'Increasing is unfavourable' = "FALSE"))
     }
     if (typ == "rate") {
       typ  = "Proportion"
@@ -386,6 +396,9 @@ shinyServer(function(input, output, session) {
       min0 = 0
       max0 = 1
       value0 = 0.5
+      inp = selectInput("goodoutso", "Effect direction:",
+                        c('Event is favourable' = "TRUE",
+                          'Event is unfavourable' = "FALSE"))
     }
     if (typ == "count") {
       typ  = "Count"
@@ -394,10 +407,12 @@ shinyServer(function(input, output, session) {
       max0 = Inf
       value0 = 0
     }
-    lapply(1:numT, function(i) {
+    list(inp,
+         lapply(1:numT, function(i) {
       numericInput(paste('effso', i, sep = ''), paste(typ, "for Treatment", i),
                    step = step0, min = min0, max = max0, value = value0, width = '100%')
-    })
+    }))
+    
   })
 
 
@@ -493,7 +508,7 @@ shinyServer(function(input, output, session) {
   output$secData <- renderPlot({
     if (input$so == T) {
       closeAlert(session, 'Alert1')
-      if(isValid_num1() | (input$efftypesso == 'absolute' && isValid_na1())){
+      if(isValid_num1() | (input$efftypeso == 'absolute' && isValid_na1())){
         closeAlert(session, 'Alertso')
         trial = SA()
         data_plot(trial)
