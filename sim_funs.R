@@ -383,9 +383,13 @@ con_sup_check = function(theta) {
 #'
 #' @export
 
-RAR_sim = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppfut = 0.95, lower = .01,
+RAR_sim = function(nt, theta0, good.out = T, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppfut = 0.95, lower = .01,
                    burn = 10*nt, response.type, conjugate_prior = T, padhere = rep(1,nt), adapt = T,
                    platf = T, compCon = F, MID = 0) {
+  if (good.out == F) {
+    if (response.type == 'absolute') theta0 = - theta0
+    if (response.type == 'rate') theta0 = 1 - theta0
+  }
   ng = nb
   addarmlater = rep(0, nt)
   if (platf == T) addarmlater[nt] = Inf
@@ -549,6 +553,16 @@ RAR_sim = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppf
     }
     est = data.frame(p.est = p.est, low = low, up = up)
   } else est = NULL
+  if (good.out == F) {
+    if (response.type == 'absolute') {
+      theta = - theta
+      est = -est
+    }
+    if (response.type == 'rate') {
+      theta = 1 - theta
+      est = 1 - est
+    }
+  }
   out = list(psup0 = psup, psup = psup_out, theta = theta, est = est, y = y, x = x[,-1], x0 = x0[,-1])
   class(out) = 'trial'
   return(out)
@@ -564,9 +578,13 @@ RAR_sim = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppf
 #'
 #' @export
 
-sim_wrapper = function(i, nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppfut = 0.95, lower = .05,
+sim_wrapper = function(i, nt, theta0, good.out = T, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppfut = 0.95, lower = .05,
                        burn = 10*nt, response.type, conjugate_prior = T, padhere = rep(0.95,nt), adapt = T,
                        platf = T, compCon = F, MID = 0) {
+  if (good.out == F) {
+    if (response.type == 'absolute') theta0 = - theta0
+    if (response.type == 'rate') theta0 = 1 - theta0
+  }
   ng = nb
   addarmlater = rep(0, nt)
   if (platf == T) addarmlater[nt] = Inf
@@ -673,8 +691,6 @@ sim_wrapper = function(i, nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.97
         prand[which(addarmlater<=j & psup[,j+1]>0)] = 1/ntj
         prand[which(addarmlater==j)] = 1/ntj
       }
-      
-      
     } else {
       mat = apply(theta[,which(prand>0),j+1], 1, con_sup_check)
       if (is.null(dim(mat))) mat = matrix(mat, N, length(which(prand>0)) - 1) else mat = t(mat)
@@ -734,10 +750,10 @@ sim_wrapper = function(i, nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.97
 #' @return estimated power and type I error rate
 #'
 #' @export
-power_compute = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppfut = 0.95, lower = .05,
+power_compute = function(nt, theta0, good.out = T, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppfut = 0.95, lower = .05,
                          burn = 10*nt, response.type, conjugate_prior = T, padhere = rep(0.95,nt), adapt = T,
                          platf = T, compCon = F, MID = 0, M = 100) {
-  df = data.frame(t(sapply(1:M, sim_wrapper, nt, theta0 = theta0, nb = nb, maxN = maxN, N = N, upper = upper, uppfut = uppfut, lower = lower,
+  df = data.frame(t(sapply(1:M, sim_wrapper, nt, theta0 = theta0, good.out = good.out, nb = nb, maxN = maxN, N = N, upper = upper, uppfut = uppfut, lower = lower,
                            burn = burn, response.type, conjugate_prior = conjugate_prior, padhere = padhere, adapt = adapt,
                            platf = platf, compCon = compCon, MID = MID, simplify = T)))
   if (compCon == T) power = apply(do.call(rbind, df$power), 2, mean) else power = mean(unlist(df$power0))
@@ -752,12 +768,12 @@ power_compute = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975
 #' @return estimated power and type I error rate
 #'
 #' @export
-alpha_compute = function(nt, theta0, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppfut = 0.95, lower = .05,
+alpha_compute = function(nt, theta0, good.out = T, nb = 1, maxN = 500, N = 1000, upper = 0.975, uppfut = 0.95, lower = .05,
                          burn = 10*nt, response.type, conjugate_prior = T, padhere = rep(0.95,nt), adapt = T,
                          platf = T, compCon = F, MID = 0, M = 100) {
   if (response.type == 'absolute' | response.type == 'count') theta0 = rep(0, nt)
   if (response.type == 'rate') theta0 = rep(mean(theta0), nt)
-  df = data.frame(t(sapply(1:M, sim_wrapper, nt, theta0 = theta0, nb = nb, maxN = maxN, N = N, upper = upper, uppfut = uppfut, lower = lower,
+  df = data.frame(t(sapply(1:M, sim_wrapper, nt, theta0 = theta0, good.out = good.out, nb = nb, maxN = maxN, N = N, upper = upper, uppfut = uppfut, lower = lower,
                            burn = burn, response.type, conjugate_prior = conjugate_prior, padhere = padhere, adapt = adapt,
                            platf = platf, compCon = compCon, MID = MID, simplify = T)))
   if (compCon == T) alpha = apply(do.call(rbind, df$power), 2, mean) else alpha = mean(unlist(df$alpha))
@@ -807,7 +823,11 @@ sampsize = function(pars, power = .8, alpha = .05, dropout = 0.2, type, sigmas) 
 #'
 #' @export
 
-AE_sim = function(trial,nt, theta_ae, response.type) {
+AE_sim = function(trial,nt, theta_ae, response.type, good.out = T) {
+  if (good.out == F) {
+    if (response.type == 'absolute') theta_ae = - theta_ae
+    if (response.type == 'rate') theta_ae = 1 - theta_ae
+  }
   x0 = trial$x0
   x = trial$x
   y = trial$y
@@ -836,7 +856,12 @@ AE_sim = function(trial,nt, theta_ae, response.type) {
     low = apply(post, 1, function(z) qgamma(.025, z[1], z[2]))
     up = apply(post, 1, function(z) qgamma(.975, z[1], z[2]))
   }
-  out = list(y = y_ae, x = x, est = data.frame(p.est = p.est, low = low, up = up))
+  est = data.frame(p.est = p.est, low = low, up = up)
+  if (good.out == F) {
+    if (response.type == 'absolute') est = -est
+    if (response.type == 'rate') est = 1 - est
+  }
+  out = list(y = y_ae, x = x, est = est)
   class(out) = 'trial'
   return(out)
 }
@@ -857,8 +882,12 @@ AE_sim = function(trial,nt, theta_ae, response.type) {
 #' @return updated posterior samples
 #'
 #' @export
-sim_wrapper_RCT = function(i, nt, theta0, maxN = 500, N = 1000, upper = 0.95,
+sim_wrapper_RCT = function(i, nt, theta0, maxN = 500, N = 1000, upper = 0.95, good.out = T,
                            response.type, conjugate_prior = T, padhere = rep(1,nt), compCon = F) {
+  if (good.out == F) {
+    if (response.type == 'absolute') theta0 = - theta0
+    if (response.type == 'rate') theta0 = 1 - theta0
+  }
   ng = maxN
   nb = maxN
   j = 0
@@ -919,10 +948,10 @@ sim_wrapper_RCT = function(i, nt, theta0, maxN = 500, N = 1000, upper = 0.95,
 #' @return estimated power
 #'
 #' @export
-power_compute_RCT = function(nt, theta0, maxN = 500, N = 1000, upper = 0.95, response.type, 
+power_compute_RCT = function(nt, theta0, maxN = 500, N = 1000, upper = 0.95, good.out = T, response.type, 
                              conjugate_prior = T, padhere = rep(1, nt), compCon = F, M = 500) {
   df = data.frame(t(sapply(1:M, sim_wrapper_RCT, nt = nt, theta0 = theta0, maxN = maxN,
-                           N = N, upper = upper, response.type = response.type,
+                           N = N, upper = upper, response.type = response.type, good.out = good.out,
                            conjugate_prior = conjugate_prior, padhere = padhere, compCon = compCon,
                            simplify = T)))
   if (compCon == T & length(df$power[[1]])>1) power = apply(do.call(rbind, df$power), 2, mean) else power = mean(unlist(df$power))
@@ -936,12 +965,12 @@ power_compute_RCT = function(nt, theta0, maxN = 500, N = 1000, upper = 0.95, res
 #' @return estimated type I error rate
 #'
 #' @export
-alpha_compute_RCT = function(nt, theta0, maxN = 500, N = 1000, upper = 0.95, response.type, 
+alpha_compute_RCT = function(nt, theta0, maxN = 500, N = 1000, upper = 0.95, response.type, good.out = T,
                              conjugate_prior = T, compCon = F, M = 500) {
   if (response.type == 'absolute' | response.type == 'count') theta0 = rep(0, nt)
   if (response.type == 'rate') theta0 = rep(mean(theta0), nt)
   df = data.frame(t(sapply(1:M, sim_wrapper_RCT, nt = nt, theta0 = theta0, maxN = maxN,
-                           N = N, upper = upper, response.type = response.type,
+                           N = N, upper = upper, response.type = response.type, good.out = good.out,
                            conjugate_prior = conjugate_prior, compCon = compCon, simplify = T)))
   if (compCon == T & length(df$power[[1]])>1) 
     alpha = apply(do.call(rbind, df$power), 2, mean) else alpha = mean(unlist(df$alpha))

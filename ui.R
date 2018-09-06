@@ -23,14 +23,15 @@ shinyUI(fluidPage(#theme="bootstrap.css",
     tabPanel("Trial Simulation",
              sidebarLayout(
                sidebarPanel(
-                 
                  div(style="display: inline-block;vertical-align:top; ", 
                      numericInput("nt", "Number of treatments:", value = 3, min = 2, max = 10)),
                  div(style="", radioButtons("efftype", "Primary outcome type", 
-                                            c('Continuous' = "absolute",
-                                              "Proportion (between 0 and 1 -- events are considered good, for adverse events use 1-p)" = "rate"),
+                                            c('Continuous (standardized: variance = 1)' = "absolute",
+                                              "Proportion (between 0 and 1)" = "rate"),
                                             selected = "absolute")),
-                 
+                 # checkboxInput("goodout", "Bigger is better"),
+                 # bsTooltip("goodout", "Check this box if a larger outcome value is associated with a positive effect.",
+                 #           "right", options = list(container = "body")),
                  div(style="display: inline-block;vertical-align:top; ", uiOutput("effboxes")),
                  
                  div(style="", uiOutput("adhere")),
@@ -39,9 +40,9 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                  conditionalPanel(
                    condition = "input.so == true",
                    radioButtons("efftypeso", "Secondary outcome type", 
-                                c('Continuous' = "absolute",
+                                c('Continuous (standardized: variance = 1)' = "absolute",
                                   #"OR" = "OR",
-                                  "Proportion (between 0 and 1 -- events are considered good, for adverse events use 1-p)" = "rate"),
+                                  "Proportion (between 0 and 1)" = "rate"),
                                 selected = "absolute"),
                    div(style="display: inline-block;vertical-align:top; ", uiOutput("effboxesso"))
                  ),
@@ -53,12 +54,13 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                  radioButtons("compCon", "Comparison:",
                               choices = c("Compare all arms simultaneously" = 'FALSE',
                                 "Compare arms against reference treatment" = 'TRUE')),
-                 
                  conditionalPanel(
                    condition = "input.compCon == 'TRUE'",
                    div(style="display: inline-block;vertical-align:top; ",
                        numericInput("MID", "Minimum important difference (MID):",
-                                    value = 0)),
+                                    value = 0, min = 0, max = 1, step = 0.01)),
+                   bsTooltip("MID", "The minimum important difference is restricted to be between 0 and 1. The sign is automatically determined based on the effect direction.",
+                             "right", options = list(container = "body")),
                    div(style="",sliderInput("uppfut", "Futility probability threshold:", step = .005,
                                             min = 0, max = 1, value = 0.95)),
                    bsTooltip("uppfut", "If the probability that a treatment effect being smaller than MID, for any of the treatment arms, falls below this threshold, the arm will be stopped (i.e. no more patients are assined to it) .",
@@ -139,7 +141,7 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                            column(2, align = "middle",
                                   conditionalPanel(
                                     condition = "input.tlimit == true",
-                                    numericInput("Tpower", "Maximum run time (s)", value = NULL),
+                                    numericInput("Tpower", "Maximum run time (sec)", value = NULL),
                                     bsTooltip("Tpower", "The simulation is terminated if run time exceeds this limit.",
                                               "right", options = list(container = "body")))
                            ),
