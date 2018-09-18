@@ -539,7 +539,13 @@ RAR_sim = function(nt, theta0, good.out = T, nb = 1, maxN = 500, N = 1000, upper
       ng <- nb
     }
     
-    if (sum(prand>0) <= 1  | max(psup[,j+1]) > upper | length(y) >= maxN) break
+    # Stop trial if maximum sample size reached always
+    if (length(y) >= maxN) break
+    
+    # Don't stop due to superiority until last arm added
+    if ((rowSums(x))[nt] != 0) {
+      if (sum(prand>0) <= 1  | max(psup[,j+1]) > upper) break
+    }
   }
   if (conjugate_prior == T) {
     if (response.type == 'absolute') {
@@ -740,7 +746,14 @@ sim_wrapper = function(i, nt, theta0, good.out = T, nb = 1, maxN = 500, N = 1000
       nb <- maxN - length(y) 
       ng <- nb
     }
-    if (sum(prand>0) <= 1  | max(psup[,j+1]) > upper | length(y) >= maxN) break
+    
+    # Stop trial if maximum sample size reached always
+    if (length(y) >= maxN) break
+    
+    # Don't stop due to superiority until last arm added
+    if ((rowSums(x))[nt] != 0) {
+      if (sum(prand>0) <= 1  | max(psup[,j+1]) > upper) break
+    }
   }
   psup_last = psup[,j+1]
   pbin = ifelse(psup_last > upper, 1, 0)

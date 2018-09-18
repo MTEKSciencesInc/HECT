@@ -342,7 +342,7 @@ shinyServer(function(input, output, session) {
       step0 = .05
       min0 = 0
       max0 = 1
-      value0 = 0.5
+      value0 = 0.1
       inp = selectInput("goodout", "Effect direction:",
                   c('Event is favourable' = "TRUE",
                     'Event is unfavourable' = "FALSE"))

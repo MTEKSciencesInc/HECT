@@ -47,7 +47,7 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                    div(style="display: inline-block;vertical-align:top; ", uiOutput("effboxesso"))
                  ),
                  
-                 checkboxInput("platf", "Platform design", value = FALSE),
+                 checkboxInput("platf", "Platform design", value = TRUE),
                  bsTooltip("platf", "When this box is checked the trial starts without the last arm. The last arm is added when at least one arm is dropped.",
                            "right", options = list(container = "body")),
                  
@@ -62,7 +62,7 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                    bsTooltip("MID", "The minimum important difference is restricted to be between 0 and 1. The sign is automatically determined based on the effect direction.",
                              "right", options = list(container = "body")),
                    div(style="",sliderInput("uppfut", "Futility probability threshold:", step = .005,
-                                            min = 0, max = 1, value = 0.95)),
+                                            min = 0, max = 1, value = 0.975)),
                    bsTooltip("uppfut", "If the probability that a treatment effect being smaller than MID, for any of the treatment arms, falls below this threshold, the arm will be stopped (i.e. no more patients are assined to it) .",
                              "right", options = list(container = "body")),
                    
@@ -77,7 +77,7 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                  
                  conditionalPanel( # "Compare all arms simultaneously" = 'FALSE'
                    condition = "input.compCon == 'FALSE'",
-                   checkboxInput("adapt", "Employ response-adaptive randomization", value = TRUE),
+                   checkboxInput("adapt", "Employ response-adaptive randomization", value = FALSE),
                    bsTooltip("adapt", "Based on patient responses accrued, allocate more patients to the better treatment(s).",
                              "right", options = list(container = "body")),
                    
@@ -104,13 +104,13 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                  
                  div(style="display: inline-block;",
                      numericInput("batchsize", "Sample size between two interim looks:",
-                                  width = "270px", value = 100, min = 1)),
+                                  width = "270px", value = 2750, min = 1)),
                  bsTooltip("batchsize", "This is the number of patients enrolled into the trial between two adaptations. If this number is small adaptations are performed more frequently resulting in more computation and increasing simulation time.",
                            "right", options = list(container = "body")),
                  
                  div(style="display: inline-block;",
                      numericInput("max", "Maximum total sample size:",
-                                  width = "270px", value = 500, min = 10)),
+                                  width = "270px", value = 13746, min = 10)),
                  bsTooltip("max", "If the total number of patients enrolled into the trial reaches this number, the trial will be terminated.",
                            "right", options = list(container = "body")),
                  
@@ -298,10 +298,11 @@ shinyUI(fluidPage(#theme="bootstrap.css",
 
                  div(style="display: inline-block;vertical-align:top; ", numericInput("ntss", "Number of treatments:",
                                                                                       value = 3)),
-                 div(style="", radioButtons("efftypess", "Primary outcome type", c('Continuous' = "absolute",
-                                                                            #"OR" = "OR",
-                                                                            "Proportion (between 0 and 1)" = "rate"),
-                                            selected = "absolute")),
+                 div(style="", radioButtons("efftypess", "Primary outcome type", 
+                                            c('Continuous' = "absolute",
+                                              #"OR" = "OR",
+                                              "Proportion (between 0 and 1)" = "rate"),
+                                            selected = "rate")),
                  div(style="display: inline-block;vertical-align:top; ", uiOutput("effboxesss")),
                  div(style="display: inline-block;vertical-align:top; ", uiOutput("varboxesss")),
                  div(style="", sliderInput("power", "Required power:",
