@@ -117,6 +117,52 @@ shinyServer(function(input, output, session) {
 
   })
   
+  dataInputArmss = eventReactive(input$buttonA, {
+    
+    adh0 = paste('adh', 1:input$nt, sep = '')
+    adh = c()
+    for (i in 1:input$nt) adh[i] = as.numeric(input[[adh0[i]]])
+    eff0 = paste('eff', 1:input$nt, sep = '')
+    eff = c()
+    for (i in 1:input$nt) eff[i] = as.numeric(input[[eff0[i]]])
+    if (is.null(input$adapt)) adp = F else adp = input$adapt
+    if (is.null(input$MID)) mid = 0 else mid = input$MID
+    
+    if (input$compCon == "TRUE") {
+      upthreshold <- input$upthreshT
+    } else {
+      upthreshold <- input$upthreshF
+    }
+    
+    
+    armss_all <- NULL
+    for (t in 1:input$M) {
+      res <- RAR_sim(nt = input$nt, theta0 = eff, good.out = input$goodout, nb = input$batchsize, maxN = input$max, N = 1000,
+                     upper = upthreshold, uppfut = input$uppfut, lower = input$lowthresh,
+                     burn = input$burnin, response.type = input$efftype, conjugate_prior = T, padhere = adh, adapt = adp,
+                     platf = input$platf, compCon = input$compCon, MID = mid)
+      armss_all <- rbind(armss_all,
+                         t(rowSums(res$x)))
+    }
+    d <- data.frame(armss_all)  
+    colnames(d) <- paste("arm", 1:ncol(d), sep = "")
+    row.names(d) <- paste("sim", 1:nrow(d), sep = "")
+    
+    write.csv(d, file = paste("arm_sizes_", Sys.Date(), ".csv", sep=""))
+    
+    return(d)
+    
+  })
+  
+  save_armss = eventReactive(input$buttonS, {
+    if (is.null(dataInputArmss)) {
+      stop("Run simulations first.")
+    }
+    write.csv(dataInputArmss, file = paste("arm_ss_data_", Sys.Date(), ".csv", sep=""))
+    return(0)
+  })
+  
+  
   power_alpha_calc = eventReactive(input$button2, {
 
     adh0 = paste('adh', 1:input$nt, sep = '')
@@ -540,6 +586,7 @@ shinyServer(function(input, output, session) {
       estPlot(trial)
     }
   })
+  
 
   output$secEst <- renderPlot({
     if(isValid_num1() | (input$efftypeso == 'absolute' & isValid_na1())){
@@ -850,6 +897,15 @@ shinyServer(function(input, output, session) {
       write.csv(values$df, file)
     }
   )
+  
+  # output$downloadData_armss <- downloadHandler(
+  #   filename = function() {
+  #     paste("arm_ss_data_", Sys.Date(), ".csv", sep="")
+  #   },
+  #   content = function(file) {
+  #     write.csv(armss.table, file)
+  #   }
+  # )
 
   observeEvent(input$clearData,{
     clearData()
@@ -915,6 +971,17 @@ shinyServer(function(input, output, session) {
 
   output$about = renderUI({
     withMathJax(includeHTML('rmd0.html'))
+  })
+  
+  output$armss.table <- DT::renderDataTable({
+    d <- dataInputArmss()
+    datatable(d, rownames = T,
+              options = list(bLengthChange=0,                       # show/hide records per page dropdown
+                             bFilter=0,                             # global search box on/off
+                             bInfo=0,
+                             bPaginate=1,
+                             bSort=0))
+    
   })
 
 

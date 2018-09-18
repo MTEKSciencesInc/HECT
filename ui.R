@@ -207,6 +207,23 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                                 br()
                                 #,
                                 #DT::dataTableOutput('RCT')
+                       ),
+                       
+                       tabPanel("Arm sample sizes",
+                                br(),
+                                actionButton("buttonA", "Run",
+                                             style="padding:4px; font-size:100%;
+                                  color:#FFF; background-color: #0095ff; border-color:#07c"),
+                
+                                # downloadButton("downloadData_armss", "Download",
+                                #                style="padding:4px; font-size:100%;
+                                #   color:#FFF; background-color: #0095ff; border-color:#07c"),
+                                DT::dataTableOutput("armss.table"), 
+                                #tabPanel("Files list", DT::dataTableOutput("armss")),
+                                #downloadButton("downloadData_armss", "Download"),
+                                br()
+                                #,
+                                #DT::dataTableOutput('RCT')
                        )
                        
                      ) # END 2nd row tabs
