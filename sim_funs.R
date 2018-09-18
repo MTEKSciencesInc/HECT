@@ -533,6 +533,12 @@ RAR_sim = function(nt, theta0, good.out = T, nb = 1, maxN = 500, N = 1000, upper
       prand[which(addarmlater==j)] = 1
     }
     
+    # Makes sure maximum sample size is not exceeded
+    if (nb > (maxN - length(y))) {
+      nb <- maxN - length(y) 
+      ng <- nb
+    }
+    
     if (sum(prand>0) <= 1  | max(psup[,j+1]) > upper | length(y) >= maxN) break
   }
   if (conjugate_prior == T) {
@@ -691,7 +697,8 @@ sim_wrapper = function(i, nt, theta0, good.out = T, nb = 1, maxN = 500, N = 1000
         prand[which(addarmlater<=j & psup[,j+1]>0)] = 1/ntj
         prand[which(addarmlater==j)] = 1/ntj
       }
-    } else {
+    } 
+    else {
       mat = apply(theta[,which(prand>0),j+1], 1, con_sup_check)
       if (is.null(dim(mat))) mat = matrix(mat, N, length(which(prand>0)) - 1) else mat = t(mat)
       check[,which(prand>0)] = cbind(rep(0, N), mat)
@@ -728,6 +735,11 @@ sim_wrapper = function(i, nt, theta0, good.out = T, nb = 1, maxN = 500, N = 1000
       prand[which(addarmlater==j)] = 1
     }
     
+    # Makes sure maximum sample size is not exceeded
+    if (nb > (maxN - length(y))) {
+      nb <- maxN - length(y) 
+      ng <- nb
+    }
     if (sum(prand>0) <= 1  | max(psup[,j+1]) > upper | length(y) >= maxN) break
   }
   psup_last = psup[,j+1]
