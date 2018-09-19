@@ -767,7 +767,6 @@ sim_wrapper = function(i, nt, theta0, good.out = T, nb = 1, maxN = 500, N = 1000
   return(out)
 }
 
-
 #' RAR simulator simulator
 #'
 #' This function simulates multiple RAR trials to calculate power and type I error rate
@@ -963,6 +962,9 @@ sim_wrapper_RCT = function(i, nt, theta0, maxN = 500, N = 1000, upper = 0.95, go
   alpha = sum(sum(pbin) == 1)
   if (compCon == T) power = pow1 else power = pow
   out = list(power = power, alpha = alpha)
+  
+  incProgress(1)#, detail = paste("Finished simulation", i))
+  
   return(out)
 }
 
@@ -973,11 +975,14 @@ sim_wrapper_RCT = function(i, nt, theta0, maxN = 500, N = 1000, upper = 0.95, go
 #' @return estimated power
 #'
 #' @export
-power_compute_RCT = function(nt, theta0, maxN = 500, N = 1000, upper = 0.95, good.out = T, response.type, 
-                             conjugate_prior = T, padhere = rep(1, nt), compCon = F, M = 500) {
-  df = data.frame(t(sapply(1:M, sim_wrapper_RCT, nt = nt, theta0 = theta0, maxN = maxN,
-                           N = N, upper = upper, response.type = response.type, good.out = good.out,
-                           conjugate_prior = conjugate_prior, padhere = padhere, compCon = compCon,
+power_compute_RCT = function(nt, theta0, maxN = 500, N = 1000, upper = 0.95, 
+                             good.out = T, response.type, conjugate_prior = T, 
+                             padhere = rep(1, nt), compCon = F, M = 500) {
+  df = data.frame(t(sapply(1:M, sim_wrapper_RCT, nt = nt, theta0 = theta0, 
+                           maxN = maxN, N = N, upper = upper, 
+                           response.type = response.type, good.out = good.out,
+                           conjugate_prior = conjugate_prior, padhere = padhere, 
+                           compCon = compCon,
                            simplify = T)))
   if (compCon == T & length(df$power[[1]])>1) power = apply(do.call(rbind, df$power), 2, mean) else power = mean(unlist(df$power))
   return(power)

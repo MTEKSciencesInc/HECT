@@ -180,36 +180,45 @@ shinyServer(function(input, output, session) {
       upthreshold <- input$upthreshF
     }
     
-    withProgress(message = 'Estimating power and type I error', value = 0, max = 2.25*input$M, {
+    withProgress(message = 'Estimating power and type I error', value = 0, max = 4*input$M, {
     
-    power_out <- withTimeout({power_compute(nt = input$nt, theta0 = eff, good.out = input$goodout,
-                                            nb = input$batchsize, maxN = input$max, N = 1000,
-                               upper = upthreshold, uppfut = input$uppfut, lower = input$lowthresh,
-                               burn = input$burnin, response.type = input$efftype, 
-                               conjugate_prior = T, padhere = adh, adapt = adp,
-                               platf = input$platf, compCon = input$compCon, MID = mid, M = input$M)},
-                timeout = ifelse(!is.null(input$Tpower), input$Tpower, Inf), onTimeout = 'silent')
+      power_out <- withTimeout({
+        power_compute(nt = input$nt, theta0 = eff, good.out = input$goodout,
+                      nb = input$batchsize, maxN = input$max, N = 1000,
+                      upper = upthreshold, uppfut = input$uppfut, 
+                      lower = input$lowthresh, burn = input$burnin, 
+                      response.type = input$efftype, conjugate_prior = T, 
+                      padhere = adh, adapt = adp, platf = input$platf, 
+                      compCon = input$compCon, MID = mid, M = input$M)},
+        timeout = ifelse(!is.null(input$Tpower), input$Tpower, Inf), 
+        onTimeout = 'silent')
+      
+    alpha_out <- withTimeout({
+      alpha_compute(nt = input$nt, theta0 = eff, good.out = input$goodout,
+                    nb = input$batchsize, maxN = input$max, N = 1000,
+                    upper = upthreshold, uppfut = input$uppfut, lower = input$lowthresh,
+                    burn = input$burnin, response.type = input$efftype, 
+                    conjugate_prior = T, padhere = adh, adapt = adp,
+                    platf = input$platf, compCon = input$compCon, MID = mid,
+                    M = input$M)},
+      timeout = ifelse(!is.null(input$Tpower), input$Tpower, 1000000), 
+      onTimeout = 'silent')
     
-    alpha_out <- withTimeout({alpha_compute(nt = input$nt, theta0 = eff, good.out = input$goodout,
-                                            nb = input$batchsize, maxN = input$max, N = 1000,
-                                            upper = upthreshold, uppfut = input$uppfut, lower = input$lowthresh,
-                                            burn = input$burnin, response.type = input$efftype, 
-                                            conjugate_prior = T, padhere = adh, adapt = adp,
-                                            platf = input$platf, compCon = input$compCon, MID = mid,
-                               M = input$M)},
-                timeout = ifelse(!is.null(input$Tpower), input$Tpower, 1000000), onTimeout = 'silent')
+    power_RCT_out <- withTimeout({
+      power_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
+                        upper = upthreshold, good.out = input$goodout,
+                        response.type = input$efftype, conjugate_prior = T,
+                        padhere = adh , compCon = input$compCon, M = input$M)}, 
+      timeout = ifelse(!is.null(input$Tpower), input$Tpower, Inf), 
+      onTimeout = 'silent')
     
-    power_RCT_out <- withTimeout({power_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
-                                   upper = upthreshold, good.out = input$goodout,
-                                   response.type = input$efftype, conjugate_prior = T,
-                                   padhere = adh , compCon = input$compCon, M = input$M)}, 
-                timeout = ifelse(!is.null(input$Tpower), input$Tpower, Inf), onTimeout = 'silent')
-    
-    alpha_RCT_out <-     withTimeout({alpha_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
-                                                        upper = upthreshold, good.out = input$goodout,
-                                                        response.type = input$efftype, conjugate_prior = T, compCon = input$compCon, 
-                                                        M = input$M)}, 
-                                     timeout = ifelse(!is.null(input$Tpower), input$Tpower, 1000000), onTimeout = 'silent')
+    alpha_RCT_out <- withTimeout({
+      alpha_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
+                        upper = upthreshold, good.out = input$goodout,
+                        response.type = input$efftype, conjugate_prior = T, 
+                        compCon = input$compCon, M = input$M)}, 
+      timeout = ifelse(!is.null(input$Tpower), input$Tpower, 1000000), 
+      onTimeout = 'silent')
     
     }) # END withProgress    
     
