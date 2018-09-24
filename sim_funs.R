@@ -944,6 +944,9 @@ sim_wrapper_RCT = function(i, nt, theta0, maxN = 500, N = 1000, upper = 0.95, go
   alpha = sum(sum(pbin) == 1)
   if (compCon == T) power = pow1 else power = pow
   out = list(power = power, alpha = alpha)
+  
+  incProgress(1)#, detail = paste("Finished simulation", i))
+  
   return(out)
 }
 
