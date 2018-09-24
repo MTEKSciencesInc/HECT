@@ -287,9 +287,9 @@ shinyServer(function(input, output, session) {
       min0 = -Inf
       max0 = Inf
       value0 = 0
-      inp = selectInput("goodout", "Effect direction:",
-                        c('Increasing is favourable' = "TRUE",
-                          'Increasing is unfavourable' = "FALSE"))
+      inp = selectInput("goodout", "Direction of effect:",
+                        c('Increment is favourable' = "TRUE",
+                          'Increment is unfavourable' = "FALSE"))
     }
     if (typ == "rate") {
       typ  = "Proportion"
@@ -297,7 +297,7 @@ shinyServer(function(input, output, session) {
       min0 = 0
       max0 = 1
       value0 = 0.5
-      inp = selectInput("goodout", "Effect direction:",
+      inp = selectInput("goodout", "Direction of effect:",
                   c('Event is favourable' = "TRUE",
                     'Event is unfavourable' = "FALSE"))
     }
@@ -386,9 +386,9 @@ shinyServer(function(input, output, session) {
       min0 = -Inf
       max0 = Inf
       value0 = 0
-      inp = selectInput("goodoutso", "Effect direction:",
-                        c('Increasing is favourable' = "TRUE",
-                          'Increasing is unfavourable' = "FALSE"))
+      inp = selectInput("goodoutso", "Direction of effect:",
+                        c('Increment is favourable' = "TRUE",
+                          'Increment is unfavourable' = "FALSE"))
     }
     if (typ == "rate") {
       typ  = "Proportion"
@@ -396,7 +396,7 @@ shinyServer(function(input, output, session) {
       min0 = 0
       max0 = 1
       value0 = 0.5
-      inp = selectInput("goodoutso", "Effect direction:",
+      inp = selectInput("goodoutso", "Direction of effect:",
                         c('Event is favourable' = "TRUE",
                           'Event is unfavourable' = "FALSE"))
     }

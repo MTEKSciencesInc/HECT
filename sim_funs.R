@@ -557,10 +557,16 @@ RAR_sim = function(nt, theta0, good.out = T, nb = 1, maxN = 500, N = 1000, upper
     if (response.type == 'absolute') {
       theta = - theta
       est = -est
+      low = est$low
+      est$low = est$up
+      est$up = low
     }
     if (response.type == 'rate') {
       theta = 1 - theta
       est = 1 - est
+      low = est$low
+      est$low = est$up
+      est$up = low
     }
   }
   out = list(psup0 = psup, psup = psup_out, theta = theta, est = est, y = y, x = x[,-1], x0 = x0[,-1])
