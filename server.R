@@ -559,10 +559,10 @@ shinyServer(function(input, output, session) {
     p0 = power_alpha0$power_out #power_calc()
     
     if (is.null(p0)) {
-      d0 <- data.frame(power = "Calculation terminated: run time exceeded the maximum permitted time by user.")
-      colnames(d0) = "Error:"
-      row.names(d0) = ""
-      return(datatable(d0, rownames = T, escape = FALSE,
+      d00 <- data.frame(power = "Calculation terminated: run time exceeded the maximum permitted time by user.")
+      colnames(d00) = "Error:"
+      row.names(d00) = ""
+      return(datatable(d00, rownames = T, escape = FALSE,
                 options = list(bLengthChange=0,                       # show/hide records per page dropdown
                                bFilter=0,                             # global search box on/off
                                bInfo=0,
@@ -577,12 +577,38 @@ shinyServer(function(input, output, session) {
           pow0[i] = paste("<font color=\"#1b7c45\"><b>",round(p0$power[i], 2), "</b></font>") else
             pow0[i] = paste("<font color=\"#FF0000\"><b>",round(p0$power[i], 2), "</b></font>")
       }
-      d0 = t(data.frame(power = pow0))
+      d00 = t(data.frame(power = pow0))
+    }
+      
+      p00 = power_alpha0$alpha_out #power_calc()
+      if (is.null(p00)) {
+        d01 <- data.frame(alpha = "Calculation terminated: run time exceeded the maximum permitted time by user.")
+        colnames(d01) = "Error:"
+        row.names(d01) = ""
+        return(datatable(d01, rownames = T, escape = FALSE,
+                         options = list(bLengthChange=0,                       # show/hide records per page dropdown
+                                        bFilter=0,                             # global search box on/off
+                                        bInfo=0,
+                                        bPaginate=0,
+                                        bSort=0)))
+      }
+      
+      if (!is.null(p00)) {
+        a0 = c()
+        for (i in 1:length(p00$alpha)) {
+          if (p00$alpha[i]<=0.05) 
+            a0[i] = paste("<font color=\"#1b7c45\"><b>",round(p00$alpha[i], 2), "</b></font>") else
+              a0[i] = paste("<font color=\"#FF0000\"><b>",round(p00$alpha[i], 2), "</b></font>")
+        }
+        d01 = t(data.frame(alpha = a0))
+      
+      d0 = rbind(d00, d01)
+      
       if (compCon == T) {
         colnames(d0) = paste('Treatment', 2:input$nt)
-        row.names(d0) = "<b>Power</b>"
+        row.names(d0) = c("<b>Power</b>", "<b>Type I error rate</b>")
         datatable(d0, rownames = T, escape = FALSE,
-                  caption = paste('Power to detect the effect of all treatments against the reference treatment:'),
+                  #caption = paste('Power to detect the effect of all treatments against the reference treatment:'),
                   options = list(bLengthChange=0,                       # show/hide records per page dropdown
                                  bFilter=0,                             # global search box on/off
                                  bInfo=0,
@@ -590,9 +616,9 @@ shinyServer(function(input, output, session) {
                                  bSort=0))
       } else {
         colnames(d0) = paste(' ')
-        row.names(d0) = "<b>Power</b>"
+        row.names(d0) = c("<b>Power</b>", "<b>Type I error rate</b>")
         datatable(d0, rownames = T, escape = FALSE,
-                  caption = paste('Power to detect the superior treatment:'), 
+                  #caption = paste('Power to detect the superior treatment:'), 
                   options = list(bLengthChange=0,                       # show/hide records per page dropdown
                                  bFilter=0,                             # global search box on/off
                                  bInfo=0,
@@ -604,56 +630,56 @@ shinyServer(function(input, output, session) {
     
   })
   
-  
-  output$alpha <- DT::renderDataTable({
-    input$button2
-    compCon = isolate(input$compCon)
-    power_alpha0 <- power_alpha_calc()
-    p0 = power_alpha0$alpha_out #power_calc()
-    if (is.null(p0)) {
-      d0 <- data.frame(power = "Calculation terminated: run time exceeded the maximum permitted time by user.")
-      colnames(d0) = "Error:"
-      row.names(d0) = ""
-      return(datatable(d0, rownames = T, escape = FALSE,
-                       options = list(bLengthChange=0,                       # show/hide records per page dropdown
-                                      bFilter=0,                             # global search box on/off
-                                      bInfo=0,
-                                      bPaginate=0,
-                                      bSort=0)))
-    }
-    
-    if (!is.null(p0)) {
-      a0 = c()
-      for (i in 1:length(p0$alpha)) {
-        if (p0$alpha[i]<=0.05) 
-          a0[i] = paste("<font color=\"#1b7c45\"><b>",round(p0$alpha[i], 2), "</b></font>") else
-            a0[i] = paste("<font color=\"#FF0000\"><b>",round(p0$alpha[i], 2), "</b></font>")
-      }
-      d0 = t(data.frame(alpha = a0))
-      if (compCon == T) {
-        colnames(d0) = paste('Treatment', 2:input$nt)
-        row.names(d0) = "<b>Type I error rate</b>"
-        datatable(d0, rownames = T, escape = FALSE,
-                  caption = paste('Probability of detecting a false positive effect for each treatment against the reference treatment:'),
-                  options = list(bLengthChange=0,                       # show/hide records per page dropdown
-                                 bFilter=0,                             # global search box on/off
-                                 bInfo=0,
-                                 bPaginate=0,
-                                 bSort=0))
-      } else {
-        colnames(d0) = paste(' ')
-        row.names(d0) = "<b>Type I error rate</b>"
-        datatable(d0, rownames = T, escape = FALSE,
-                  caption = paste('Probability of false positive:'),
-                  options = list(bLengthChange=0,                       # show/hide records per page dropdown
-                                 bFilter=0,                             # global search box on/off
-                                 bInfo=0,
-                                 bPaginate=0,
-                                 bSort=0))
-      }
-      
-    }
-  })
+  # 
+  # output$alpha <- DT::renderDataTable({
+  #   input$button2
+  #   compCon = isolate(input$compCon)
+  #   power_alpha0 <- power_alpha_calc()
+  #   p0 = power_alpha0$alpha_out #power_calc()
+  #   if (is.null(p0)) {
+  #     d0 <- data.frame(power = "Calculation terminated: run time exceeded the maximum permitted time by user.")
+  #     colnames(d0) = "Error:"
+  #     row.names(d0) = ""
+  #     return(datatable(d0, rownames = T, escape = FALSE,
+  #                      options = list(bLengthChange=0,                       # show/hide records per page dropdown
+  #                                     bFilter=0,                             # global search box on/off
+  #                                     bInfo=0,
+  #                                     bPaginate=0,
+  #                                     bSort=0)))
+  #   }
+  #   
+  #   if (!is.null(p0)) {
+  #     a0 = c()
+  #     for (i in 1:length(p0$alpha)) {
+  #       if (p0$alpha[i]<=0.05) 
+  #         a0[i] = paste("<font color=\"#1b7c45\"><b>",round(p0$alpha[i], 2), "</b></font>") else
+  #           a0[i] = paste("<font color=\"#FF0000\"><b>",round(p0$alpha[i], 2), "</b></font>")
+  #     }
+  #     d0 = t(data.frame(alpha = a0))
+  #     if (compCon == T) {
+  #       colnames(d0) = paste('Treatment', 2:input$nt)
+  #       row.names(d0) = "<b>Type I error rate</b>"
+  #       datatable(d0, rownames = T, escape = FALSE,
+  #                 caption = paste('Probability of detecting a false positive effect for each treatment against the reference treatment:'),
+  #                 options = list(bLengthChange=0,                       # show/hide records per page dropdown
+  #                                bFilter=0,                             # global search box on/off
+  #                                bInfo=0,
+  #                                bPaginate=0,
+  #                                bSort=0))
+  #     } else {
+  #       colnames(d0) = paste(' ')
+  #       row.names(d0) = "<b>Type I error rate</b>"
+  #       datatable(d0, rownames = T, escape = FALSE,
+  #                 caption = paste('Probability of false positive:'),
+  #                 options = list(bLengthChange=0,                       # show/hide records per page dropdown
+  #                                bFilter=0,                             # global search box on/off
+  #                                bInfo=0,
+  #                                bPaginate=0,
+  #                                bSort=0))
+  #     }
+  #     
+  #   }
+  # })
 
   # output$alpha <- renderUI({
   #   power_alpha0 <- power_alpha_calc()

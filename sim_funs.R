@@ -424,7 +424,7 @@ RAR_sim = function(nt, theta0, good.out = T, nb = 1, maxN = 500, N = 1000, upper
     #   text <- paste0("updating results based on batch/patient:", j)
     #   updateProgress(detail = text)
     # }
-    
+    if (j*nb>maxN) nb = maxN - (j-1)*nb
     xb = rmultinom(nb, 1, prob = prand)
     xb0 = xb
     for (k in 1:nb) {
@@ -625,7 +625,7 @@ sim_wrapper = function(i, nt, theta0, good.out = T, nb = 1, maxN = 500, N = 1000
     #   text <- paste0("updating results based on batch/patient:", j)
     #   updateProgress(detail = text)
     # }
-    
+    if (j*nb>maxN) nb = maxN - (j-1)*nb
     xb = rmultinom(nb, 1, prob = prand)
     xb0 = xb
     for (k in 1:nb) {
@@ -667,10 +667,10 @@ sim_wrapper = function(i, nt, theta0, good.out = T, nb = 1, maxN = 500, N = 1000
       theta_new = apply(post0, 1, function(x) rnorm(N, x[1], x[2]))
     }
     #theta_new[,which(addarmlater>j)] = -Inf
-    theta = abind(theta, theta_new, along = 3)
+    #theta = abind(theta, theta_new, along = 3)
     
     if (compCon == F) {
-      check[,which(prand>0)] = t(apply(theta[,which(prand>0),j+1], 1, sup_check))
+      check[,which(prand>0)] = t(apply(theta_new[,which(prand>0)], 1, sup_check))
       check[,which(prand==0)] = 0
       psup_out = abind(psup_out, apply(check, 2, mean), along = 2)
       psup_out[which(addarmlater>j), j+1] = 0
@@ -698,7 +698,7 @@ sim_wrapper = function(i, nt, theta0, good.out = T, nb = 1, maxN = 500, N = 1000
         prand[which(addarmlater==j)] = 1/ntj
       }
     } else {
-      mat = apply(theta[,which(prand>0),j+1], 1, con_sup_check)
+      mat = apply(theta_new[,which(prand>0)], 1, con_sup_check)
       if (is.null(dim(mat))) mat = matrix(mat, N, length(which(prand>0)) - 1) else mat = t(mat)
       check[,which(prand>0)] = cbind(rep(0, N), mat)
       check[,which(prand==0)] = 0
@@ -707,7 +707,7 @@ sim_wrapper = function(i, nt, theta0, good.out = T, nb = 1, maxN = 500, N = 1000
       if (length(y) < burn) {
         psup = abind(psup, psup[,j], along = 2)
       } else psup = abind(psup, apply(check, 2, mean), along = 2)
-      if (response.type == 'absolute') fmat = apply(theta[,which(prand>0),j+1], 1, con_fut_check, MID = MID)
+      if (response.type == 'absolute') fmat = apply(theta_new[,which(prand>0)], 1, con_fut_check, MID = MID)
       if (response.type == 'rate') fmat = apply(p_new[,which(prand>0)], 1, con_fut_check, MID = MID)
       if (is.null(dim(fmat))) fmat = matrix(fmat, N, length(which(prand>0)) - 1) else fmat = t(fmat)
       fcheck[,which(prand>0)] = cbind(rep(0, N), fmat)
