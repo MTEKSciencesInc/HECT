@@ -5,8 +5,8 @@ account: mtek
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 424914
-bundleId: 1602450
+bundleId: 1602610
 url: https://mtek.shinyapps.io/hect/
-when: 1537805319.48958
+when: 1537809667.14135
 asMultiple: FALSE
 asStatic: FALSE

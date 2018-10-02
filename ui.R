@@ -158,19 +158,17 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                      
                      
                      tabsetPanel( # START 2nd row tabs
-                       tabPanel("Power",
+                       tabPanel("Power and type I error",
                                 br(),
                                 DT::dataTableOutput("power")
+                                # ,
+                                # DT::dataTableOutput("alpha")
                        ),
                        tabPanel("Sample size distribution/cost evaluation", 
                                 plotOutput("ssdist"), DT::dataTableOutput("sssummary"),
                                 htmlOutput('sssave'), plotOutput("cdist"), DT::dataTableOutput("csummary"),
                                 htmlOutput('csave')),
-                       tabPanel("Type I error rate",
-                                
-                                br(),
-                                DT::dataTableOutput("alpha")
-                       ),
+                      
                        tabPanel("Saved simulation configurations and results",
                                 br(),
                                 actionButton("submit", "Save recent results"),
@@ -305,7 +303,7 @@ shinyUI(fluidPage(#theme="bootstrap.css",
                )
              )
     ),
-    tabPanel("About",
+    tabPanel("User Manual",
              fluidRow(uiOutput('about'))
 
     )

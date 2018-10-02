@@ -5,6 +5,12 @@ output:
   html_document: default
   pdf_document: default
 ---
+<style>
+.nobullet li {
+  list-style-type: none;
+}
+</style>
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -12,7 +18,112 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Summary
 
-The HECT simulator is an application designed to explore the various features and utilities of Bayesian Response Adaptive Randomized trial designs (BRAR). For a given set of design components specified by the user, data can be generated for a single BRAR trial with an embedded Bayesian analysis. Single trial simulation provides a better understanding of the progression of the trial with the adaptive component under different scenarios. In addition, under the `Trial design properties` tab, simulation studies are enhanced to investigate statistical properties including power and type I error rate. The HECT simulator is designed to be accessible to non-statisticians such that an intuitive understanding of the adaptive design is enough to use the application for planning clinical trials. However, a detailed description of the underlying assumptions and statistical models is provided in the following sections.
+The highly efficient clinical trial (HECT) simulator is an online-application that allows users to perform simulations of Bayesian platform adaptive trial to evaluate the pros and cons of candidate trial designs. They key design features in the application are early stopping for benefits (i.e. superiority) or lack of benefits (i.e. futility), as well as the flexibility of dropping or adding treatment arms. The application incorporates a wide range of other features to optimize efficiency and ethics of the clinical trial as, such as a number of time and cost related inputs and outputs. This application was created by MTEK Sciences Inc. with the support from the Bill and Melinda Gates Foundation. 
+
+
+### Input panel
+
+To perform simulations, the user is required to specify a design. The following design components are specified by the user in the input panel to the left side of the window:
+
+**Number of treatments:** Number of treatment arms in the trial including the control arm.
+
+**Type of primary outcome:** The user can choose either “Continuous” or “Proportion” as the type of outcome. Continuous outcomes (such as measurements of height or weight) need to be standardized to have mean 0 and variance 1. If “Proportion” is selected as the type of outcome, dichotomous patient responses are simulated. 
+
+**Direction of effect:** The user can specify if a larger effect size is considered positive by choosing the “Increment/Event is favorable” option. More specifically, if “Increment/Event is favorable”, the treatment with the largest specified effect is assumed superior while if “Increment/Event is unfavorable”, the treatment with the smallest specified effect is assumed superior.
+
+**Effect sizes/proportions:** The assumed effect size (standardized) for continuous outcomes and proportion of events (a value between 0 and 1) for dichotomous outcomes need to be specified by the user.
+
+**Probabilities of adherence:** The default value for the probability of adherence is 1, i.e., it is assumed that for 100% of patients adheres to the treatment. The user may select a smaller value based on available prior knowledge for the probability of adherence to some or all the treatments. An adherence probability of 90% means that only 90% of the subjects that where assigned to a treatment arm actually received the treatment. The adherence can be different for each treatment. The probabilities of adherence are used in simulating the outcome but are ignored in any interim or final analysis, i.e., the trialist is assumed blinded to the fact that the adherence may be less than 100%. 
+
+**Secondary outcome:** The user may choose to add a secondary outcome to be monitored. The secondary outcome is not used to inform any adaptations or stopping rules, but merely monitored. Setting a secondary outcome thereby allows the user to monitor what happens to power and type I error or detecting an effect for the secondary outcome under different designs and adaptations made based on the results of the primary outcome. The format for entering secondary outcomes the same as that of the primary outcomes.
+
+**Platform design:** By default, a trial design begins randomization to all treatment arms with the first patient. A Platform design is one in which randomization to one or more treatments commences after some pre-determined point later during the trial. The HECT simulator provides an option for a simple platform design, in which one new treatment arm can be added upon the first instance where another treatment arm is dropped. In the HECT simulator, the treatment arm that is added later is be default set to the last treatment arm. For example, in a three arm trial where the platform design box has been checked, the addition of ‘Treatment 3’ is automatically triggered by the dropping of either ‘Treatment 1’ or ‘Treatment 2’. If no treatment is dropped before reaching the ‘Maximum total sample size’, ‘Treatment 3’ will not be added to the trial.  
+
+**Comparisons:** Depending on the research question, the user may be interested in a design where all the arms are compared simultaneously, or a design where all arms are compared to one reference treatment. The stopping rules and adaptations are performed differently under these two designs.
+
+<div class="nobullet">
+* #### Compare all arms simultaneously
+
+*   **Response adaptive randomization:** When all arms are compared simultaneously, the user may choose to adjust the allocation ratio to favour the treatment arm that appears to be performing better. The allocation ratio for each treatment arm is determined by the probability that the corresponding treatment is superior to the rest. If the response adaptive randomization option is selected, patients are allocated according to the ratio between the square roots of the probabilities of superiority across treatment arms. Note, the square root is used to stabilize allocation and thereby avoiding overt allocation to a single treatment. If the response adaptive randomization option is not selected the trial continues with equal allocation to all arms.
+
+*   **Stopping arm for futility at:** Under the simultaneous comparison option futility for an arm is defined as the case where probability of the corresponding treatment being superior to all other treatments is negligible. More specifically an arm is dropped if probability of being superior among all treatments falls below some threshold. This lower threshold is specified by the user and the default value is set at 0.01 (1%). As such, with the default setting a treatment is dropped if the probability of it being superior to all other treatments falls below 1%. 
+
+*   **Terminating trial for Superiority:** If the probability that a treatment arm is superior to all other treatments crosses an upper threshold the trial is terminated. This upper threshold is specified by the user and the default value is 0.975 (97.5%). As such, with the default setting the trial is terminated if the probability of any one treatment being superior to all others exceed 97.5%.
+
+* #### Compare arms against reference treatment
+
+*   **Minimally important difference:** When arms are compared to a reference treatment (by default set to ‘Treatment 1’), a minimally important difference (MID) may is used to determine futility for each pair wise comparison to the reference treatment. The default value for MID is set at 0 and can be specified to any value between 0 and 1. The MID is specified as an absolute value. For example, for a binary outcome an MID of 0.05 corresponds to a 5% absolute difference between the reference treatment and any other treatment. For a continuous outcome an MID of 0.2 corresponds to an absolute difference of 0.2 standard deviation units.
+
+*   **Stopping and arm for futility:** Under the pairwise control comparison option futility for a treatment is defined as the case where the probability that the difference between the corresponding treatment and the reference treatment being smaller than the MID exceeds a certain upper threshold. This upper threshold is specified by the user and its default value is 0.95. Note that the reference treatment arm (first arm) is never dropped under the comparison to control option. As an example of this rule, if the outcome is binary, the MID is set to 5% (0.05 in the application) and the probability threshold at 95% (0.95 in the application), then the treatment being compared to the reference treatment is dropped at an interim look if the probability of the difference between the two treatments being smaller than 5% (0.05) exceeds 95%.
+
+*   **Stopping for Superiority:** superiority stopping rule is the same as that used under the simultaneous comparison design.  
+</div>
+
+
+**Burn-in sample size:**
+The user can specify an initial sample size that is required to be collected before any adaptation or stopping decision is made. That is, no possible adaptations (trial termination, dropping arms, adaptive allocation ratio, etc.) are made before the trial has reached its burn in sample size. The default value is set to 100 patients.
+
+**Interim sample size:**
+In the HECT simulator application, interim looks are equidistant by default. The interim sample size is the number of patients enrolled between each interim look. This number also indirectly determines the number of interim looks during the trial. Note, if the interim sample size is smaller than the burn-in sample size, the first interim look will be performed at a number of patients divisible by the interim sample size which is larger than the burn in sample size. Also note that the frequency of interim looks increases the simulation run time.
+
+**Maximum sample size:**
+The maximum permitted total number of patients. If the trial is not stopped according to the stopping rules before the maximum sample size is reached it will terminate when the sample size exceeds this number. 
+
+**Enrollment cost:**
+The user can specify the enrollment cost of each patient in dollar which allows for trial cost evaluation and comparisons.
+
+
+### Trial design properties
+
+Once all trial design inputs have been specified, simulations can be run. The trial design properties tab sets of the main panel (top right side of the screen) is where multiple simulations are run and simulation outputs are available. The statistical properties of the design are estimated by repeatedly simulating the trial and monitoring the frequency of a specific outputs (e.g., the number of times that the superior treatment is correctly concluded superior is the simulated power). The user can specify the number of simulations used. Increasing the number of simulations will increase the run time. Therefore, it is possible to define a limit for the run time. The run button to the right side of the panel initiates a simulation run. The simulation is terminated when the specified number of simulations have been completed or when the run time reaches this limit, whichever comes first. After a simulation run has been complete, the respective simulation outputs will be available under the tabs: ‘Power’, ‘Sample size distribution/cost evaluation’, and ‘Type I error rate’. The trial design properties panel also includes the ‘Saved simulation configurations and results’ tab, which allows the user to save simulation configurations and results from simulations runs under various configurations. Lastly, the ‘Comparison with RCT’ tab allows for a comparison between the platform/adaptive design and a conventional randomized clinical trial (RCT) design with respect to type I error, power, and cost.
+
+**power:**
+<div class="nobullet">
+*   *Compare all arms simultaneously:* under this setting power is defined as the probability that the superior arm is correctly concluded superior at the end of the trial and is estimated as the proportion of times that this correct conclusion is made among the simulated trials.
+
+*   *Compare arms against reference treatment:* under this setting power is defined for each arm (except control) as the probability that the corresponding treatment is concluded superior to control given that it is in fact superior to control.
+</div>
+
+**Sample size distribution/cost evaluation:** Under the adaptive design where stopping rules are used, the sample size at trial termination is not fixed. Therefore, one of the operational characteristics of any design with early stopping is the distribution of sample size at trial termination. A histogram of the final sample sizes for the simulated trials in addition to a table of quantiles of the distribution of final sample sizes is given under this tab. In addition, if cost per patient is specified by the user the same output is provided for the cost.
+
+**Type I error rate:** 
+<div class="nobullet">
+*   *Compare all arms simultaneously:* under this setting type I error rate or probability of false positive is defined as the probability that any arm is concluded superior at the end of the trial given that all the treatment effects are the same (no effect). The effect sizes entered by the user are not used for estimating the false positive rate (type I error), the effect sizes are set to zero for continuous outcomes and the proportions are set the average of the values entered by the user. The false positive rate is estimated as the proportion of simulated trials where superiority is wrongly concluded.
+
+*   *Compare arms against reference treatment:* under this setting type I error rate for each pairwise comparison is estimated as the proportion of simulated trials where the corresponding treatment is falsely concluded superior to control (i.e., under the scenario where the two do not differ). 
+</div>
+
+**Saved simulation configurations and results:** The user can manage the results of a completed simulation in this tab. The results can be temporarily saved for quick comparisons or be downloaded by the user. The user is allowed to configure the rows and columns of the table containing the simulation results to include the data that is of interest.
+
+**Comparison with RCT:** It is often of interest to compare an adaptive design to a conventional design with fixed sample size. In the HECT simulator the properties of the design specified by the user are compared to a design with a fixed sample size set at the maximum total sample size, balanced randomization and no interim looks. Note that, to assure fairness of the comparison, the final analysis for the simulated conventional trial is a Bayesian analysis with the same statistical model that is used for the adaptive trial. The comparisons are presented in form of graphs of power, type I error rate and average cost for the two trial designs.
+
+### Single Trial Simulation
+
+To allow for further in-depth exploration of the behaviour under any given trial design, the HECT application also comes with an option to simulate one trial at a time. With a number of informative visuals, this allows the user to visually gauge just how much variation (certainty or uncertainty) one can expect from a single trial. For example, if the power is unexpectedly low, the user can monitor the probability of superiority for each treatment arm and the corresponding effect estimates for every interim look to understand the reason(s) behind low chance of detecting the signal. 
+
+**Design:** A graphical representation of the trial is provided under the design tab that shows the portion of the trial duration that any arm was present in. If dropping of arms is part of the design, this output will show how long any treatment arm was kept in the trial for any single trial simulation. If a platform design is employed, this output will show when one arm was dropped and another added.
+
+**Data: ** The data tab provides a visual summary of the patient data over time for the simulated trial. The plots represent observed patient outcomes (y-axis) split by treatment arm over time (x-axis). The response mean/proportion, allocation ratios and number of patients assigned to each arm are provided in a table below the graph.
+
+**Probability of superiority:** The evolution of the probability of superiority of each treatment through the course of the trial can be explored. Since these probabilities are used for stopping decisions this tab provides explanations for the statistical properties estimated under the Trial design properties tab in terms of specific case scenarios. The probabilities of superiority are plotted for each interim look.	
+
+**Estimates:** Point estimates and 95% credible intervals are provided for the parameters associated with each arm. These estimates may be used to obtain effect estimates in form of RR, OR and mean difference. The point estimates and 95% credible intervals are based on the full trial data set.
+
+**Posterior:** The posterior distributions of the arm associated parameters at selected interim looks are provided to diagnose any estimation issues or provide explanations for the probability of superiority estimates that are generated from these posterior distributions.
+
+**Secondary analysis:** If secondary outcomes are set to be monitored by the user, this tab will produce a graph of data over time similar to the one in the ‘Data’ tab as well as point estimates and 95% credible intervals similar to those in the ‘Estimates’ tab.
+
+
+#### Technical details
+
+The full technical details are available in the appendix. 
+
+
+####Acknowledgements
+The development of this application was funded by the Bill & Melinda Gates Foundation.
+
+______________________________________________________________________________________________________
+## Appendix -- Technical reference
 
 ### Trial Simulation
 
@@ -154,4 +265,3 @@ references:
   issued:
     year: 2010
 ---
-
