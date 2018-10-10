@@ -532,8 +532,9 @@ RAR_sim = function(nt, theta0, good.out = T, nb = 1, maxN = 500, N = 1000, upper
       prand[1] = 1
       prand[which(addarmlater==j)] = 1
     }
-    
-    if (sum(prand>0) <= 1  | max(psup[,j+1]) > upper | length(y) >= maxN) break
+    condition_A = (platf == F | nt > 3 | j>addarmlater[nt]) & (max(psup[,j+1]) > upper)
+    if (condition_A | sum(prand>0) <= 1  | length(y) >= maxN) break
+    #if (sum(prand>0) <= 1  | max(psup[,j+1]) > upper | length(y) >= maxN) break
   }
   if (conjugate_prior == T) {
     if (response.type == 'absolute') {
@@ -733,8 +734,8 @@ sim_wrapper = function(i, nt, theta0, good.out = T, nb = 1, maxN = 500, N = 1000
       prand[1] = 1
       prand[which(addarmlater==j)] = 1
     }
-    
-    if (sum(prand>0) <= 1  | max(psup[,j+1]) > upper | length(y) >= maxN) break
+    condition_A = (platf == F | nt > 3 | j>addarmlater[nt]) & (max(psup[,j+1]) > upper)
+    if (condition_A | sum(prand>0) <= 1  | length(y) >= maxN) break
   }
   psup_last = psup[,j+1]
   pbin = ifelse(psup_last > upper, 1, 0)
@@ -795,7 +796,9 @@ alpha_compute = function(nt, theta0, good.out = T, nb = 1, maxN = 500, N = 1000,
 #' @param pars vector of effect sizes, length equals number of arms
 #' @param power required statistical power
 #' @param alpha required type I error rate
+#' @param dropout drop-out rate
 #' @param type effect type "absolute" or "rate"
+#' @param sigmas variances
 #' @return sample size per arm \code{n} and total sample size \code{N}
 #'
 #' @export
@@ -814,6 +817,99 @@ sampsize = function(pars, power = .8, alpha = .05, dropout = 0.2, type, sigmas) 
   N = n * length(pars)
   out = list(n = n, N = N)
   return(out)
+}
+
+#' Frequentist pairwise power
+#'
+#' This function calculates power given sample size and effect size for a pairwise comparison 
+#'
+#' @param delta effect size, mean or proportion difference
+#' @param n sample size per arm
+#' @param alpha required type I error rate
+#' @param type effect type "absolute" or "rate"
+#' @param sigmas variances
+#' @return power
+#'
+#' @export
+power_freq = function(delta, n, alpha = 0.05, type, sigma) {
+  c = qnorm(1 - alpha/2)
+  z0 = delta * sqrt(n)/sqrt(sigma)
+  pnorm(z0 - c) + pnorm(- z0 - c)
+}
+
+#' Frequentist multi-arm power
+#'
+#' This function calculates power given sample size and effect size for a multi-arm trial 
+#'
+#' @param n sample size per arm
+#' @param pars effect sizes
+#' @param alpha required type I error rate
+#' @param type effect type "absolute" or "rate"
+#' @param sigmas variances
+#' @param target used for optimization, default is zero
+#' @return power
+#'
+#' @export
+power_freqsup = function(n, pars, alpha = 0.05, type, sigmas, target = 0){
+  if (missing(sigmas)) {
+    if (type == 'absolute') sigmas = rep(1, length(pars))
+  }
+  if (type == 'rate') sigmas = pars * (1 - pars)
+  nc = choose(length(pars), 2)
+  alphai = alpha/nc
+  j = which.max(pars)
+  delta = pars[j] - pars[-j]
+  sigma = sigmas[j] + sigmas[-j]
+  pows = power_freq(delta, n, alpha = alphai, type = type, sigma = sigma)
+  prod(pows) - target
+}
+
+#' Frequentist compare-to-control power
+#'
+#' This function calculates power for comparing each arm to control given sample size and effect size for a multi-arm trial 
+#'
+#' @param n sample size per arm
+#' @param pars effect sizes
+#' @param alpha required type I error rate
+#' @param type effect type "absolute" or "rate"
+#' @param sigmas variances
+#' @param target used for optimization, default is zero
+#' @return power
+#'
+#' @export
+power_freqcon = function(n, pars, alpha = 0.05, type, sigmas, target = 0){
+  if (missing(sigmas)) {
+    if (type == 'absolute') sigmas = rep(1, length(pars))
+  }
+  if (type == 'rate') sigmas = pars * (1 - pars)
+  nc = length(pars) - 1
+  alphai = alpha/nc
+  j = 1
+  delta = pars[j] - pars[-j]
+  sigma = sigmas[j] + sigmas[-j]
+  pows = power_freq(delta, n, alpha = alphai, type = type, sigma = sigma)
+  pows - target
+}
+
+#' Multi-arm frequentist sample size 
+#'
+#' This function calculates sample size per arm for a given power effect sizes for a multi-arm trial 
+#'
+#' @param power target power, default is 0.8
+#' @param pars effect sizes
+#' @param alpha required type I error rate
+#' @param type effect type "absolute" or "rate"
+#' @param sigmas variances
+#' @return sample size per arm
+#'
+#' @export
+sampsize_freqsup = function(power = .8, pars, alpha = 0.05, type, sigmas) {
+  if (missing(sigmas)) {
+    if (type == 'absolute') sigmas = rep(1, length(pars))
+  }
+  if (type == 'rate') sigmas = pars * (1 - pars)
+  ceiling(uniroot(power_freqsup, c(1, 100000), pars = pars, alpha = 0.05, type = type, sigmas = sigmas, 
+                  target = 0.8)$root)
 }
 
 

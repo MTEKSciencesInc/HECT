@@ -1,0 +1,12 @@
+name: hect
+title: HECT
+username: shirin.golchi
+account: shirin.golchi
+server: rstudio.studyexplorer.io
+hostUrl: https://rstudio.studyexplorer.io/__api__
+appId: 18
+bundleId: 63
+url: https://rstudio.studyexplorer.io/content/18/
+when: 1538766658.71588
+asMultiple: FALSE
+asStatic: FALSE
