@@ -45,7 +45,7 @@ shinyServer(function(input, output, session) {
   })
 
   # Workaround for hover box not showing up properly for superiority bar given diffrerent options
-
+  
   dataInput = eventReactive(input$button, {
     if(isValid_num0() | input$efftype == 'absolute'){
       closeAlert(session, 'Alert0')
@@ -153,24 +153,25 @@ shinyServer(function(input, output, session) {
                                M = input$M)},
                 timeout = ifelse(!is.null(input$Tpower), input$Tpower, 1000000), onTimeout = 'silent')
     
-    power_RCT_out <- withTimeout({power_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
-                                   upper = upthreshold, good.out = input$goodout,
-                                   response.type = input$efftype, conjugate_prior = T,
-                                   padhere = adh , compCon = input$compCon, M = input$M)}, 
-                timeout = ifelse(!is.null(input$Tpower), input$Tpower, Inf), onTimeout = 'silent')
-    
-    alpha_RCT_out <-     withTimeout({alpha_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
-                                                        upper = upthreshold, good.out = input$goodout,
-                                                        response.type = input$efftype, conjugate_prior = T, compCon = input$compCon, 
-                                                        M = input$M)}, 
-                                     timeout = ifelse(!is.null(input$Tpower), input$Tpower, 1000000), onTimeout = 'silent')
+    # power_RCT_out <- withTimeout({power_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
+    #                                upper = upthreshold, good.out = input$goodout,
+    #                                response.type = input$efftype, conjugate_prior = T,
+    #                                padhere = adh , compCon = input$compCon, M = input$M)}, 
+    #             timeout = ifelse(!is.null(input$Tpower), input$Tpower, Inf), onTimeout = 'silent')
+    # 
+    # alpha_RCT_out <-     withTimeout({alpha_compute_RCT(nt = input$nt, theta0 = eff, maxN = input$max, N = 1000,
+    #                                                     upper = upthreshold, good.out = input$goodout,
+    #                                                     response.type = input$efftype, conjugate_prior = T, compCon = input$compCon, 
+    #                                                     M = input$M)}, 
+    #                                  timeout = ifelse(!is.null(input$Tpower), input$Tpower, 1000000), onTimeout = 'silent')
     
     }) # END withProgress    
     
     return(list(power_out = power_out, 
-                alpha_out = alpha_out, 
-                power_RCT_out = power_RCT_out, 
-                alpha_RCT_out = alpha_RCT_out))
+                alpha_out = alpha_out))
+                #power_RCT_out = power_RCT_out, 
+                #alpha_RCT_out = alpha_RCT_out,
+                #ss_RCT_out = ss_RCT_out))
     
   })
   
@@ -462,7 +463,8 @@ shinyServer(function(input, output, session) {
   })
 
   output$ss <- renderUI({
-    if(isValid_num() | (input$efftypess == 'absolute' && isValid_na())){
+    efftypess = isolate(input$efftypess)
+    if(isValid_num() | (efftypess == 'absolute' && isValid_na())){
       closeAlert(session, 'Alertss')
       ss = sample_size()
       HTML(paste('<br/>'), paste("<pre>",'Sample size per arm:', "<font color=\"#FF0000\"><b>", ss$n, "</b></font>"),
@@ -578,7 +580,16 @@ shinyServer(function(input, output, session) {
             pow0[i] = paste("<font color=\"#FF0000\"><b>",round(p0$power[i], 2), "</b></font>")
       }
       d00 = t(data.frame(power = pow0))
+      if (!is.null(p0$pfut)) {
+        fut0 = c()
+        for (i in 1:length(p0$pfut)) {
+          fut0[i] = paste(round(p0$pfut[i], 2)) 
+        }
+        d02 = t(data.frame(pfut = fut0))
+      }
     }
+    
+    
       
       p00 = power_alpha0$alpha_out #power_calc()
       if (is.null(p00)) {
@@ -602,11 +613,11 @@ shinyServer(function(input, output, session) {
         }
         d01 = t(data.frame(alpha = a0))
       
-      d0 = rbind(d00, d01)
+      if (!is.null(p0$pfut)) d0 = rbind(d00, d01, d02) else d0 = rbind(d00, d01)
       
       if (compCon == T) {
         colnames(d0) = paste('Treatment', 2:input$nt)
-        row.names(d0) = c("<b>Power</b>", "<b>Type I error rate</b>")
+        row.names(d0) = c("<b>Power</b>", "<b>Type I error rate</b>", "<b>Probability of futility</b>")
         datatable(d0, rownames = T, escape = FALSE,
                   #caption = paste('Power to detect the effect of all treatments against the reference treatment:'),
                   options = list(bLengthChange=0,                       # show/hide records per page dropdown
@@ -893,16 +904,47 @@ shinyServer(function(input, output, session) {
   
   output$HECTvsBRCTplot <- renderPlot({
     input$button2
+    compCon = isolate(input$compCon)
+    efftype = isolate(input$efftype)
+    eff0 = paste('eff', 1:input$nt, sep = '')
+    eff = c()
+    for (i in 1:input$nt) eff[i] = as.numeric(input[[eff0[i]]])
+    
+    if (compCon == T) {
+      nc = input$nt-1
+      alpha0 = ifelse(input$mc, 0.05, 0.05*nc)
+      alpha_RCT_out = rep(alpha0/nc, nc)
+      if (input$fix == 'ss') {
+        power_RCT_out = power_freqcon(floor(input$max/input$nt), eff, alpha = alpha0, type = efftype,
+                                      target = 0)
+        ss_RCT_out = NULL
+      } else {
+        power_RCT_out = rep(0.8, nc)
+        ss_RCT_out = sampsize(pars = eff, power = .8, alpha = alpha0, dropout = 0, type = efftype)$N
+      }
+      
+    } else {
+      nc = choose(input$nt, 2)
+      alpha0 = ifelse(input$mc, 0.05, 0.05*nc)
+      alpha_RCT_out = alpha0
+      if (input$fix == 'ss') {
+        power_RCT_out = power_freqsup(floor(input$max/input$nt), eff, alpha = alpha0, type = efftype,
+                                      target = 0)
+        ss_RCT_out = NULL
+      } else {
+        power_RCT_out = 0.8
+        ss_RCT_out = sampsize_freqsup(power = .8, pars = eff, alpha = alpha0, type = efftype)
+      }
+    }
     power_alpha0 <- power_alpha_calc()
     p0 = power_alpha0$power_out #power_calc()
     a0 = power_alpha0$alpha_out #alpha_calc()
     if(!is.null(a0)) al0 = a0$alpha else al0 =  NULL
     if(!is.null(a0)) pow0 = p0$power else pow0 =  NULL
     d0 = ifelse(!is.null(p0), mean(p0$Nt * input$ec), NULL)
-    al1 = power_alpha0$alpha_RCT_out
-    pow1 = power_alpha0$power_RCT_out
-    d1 = input$max * input$ec
-    compCon = isolate(input$compCon)
+    al1 = alpha_RCT_out
+    pow1 = power_RCT_out
+    d1 = ifelse(input$fix == 'ss', input$max, ss_RCT_out) * input$ec
     HECTvsBRCTPlot(a0 = al0, a1 = al1,
                    p0 = pow0, p1 = pow1, 
                    c0 = d0, c1 = d1, compCon = compCon)
@@ -910,16 +952,43 @@ shinyServer(function(input, output, session) {
   })
   
   output$test <- renderText({
+    compCon = isolate(input$compCon)
+    eff0 = paste('eff', 1:input$nt, sep = '')
+    eff = c()
+    for (i in 1:input$nt) eff[i] = as.numeric(input[[eff0[i]]])
+    if (compCon == T) {
+      alpha_RCT_out = rep(0.05, input$nt-1)
+      if (input$fix == 'ss') {
+        power_RCT_out = power_freqcon(floor(input$max/input$nt), eff, alpha = 0.05, type = input$efftype,
+                                      target = 0)
+        ss_RCT_out = NULL
+      } else {
+        power_RCT_out = 0.8
+        ss_RCT_out = sampsize(pars = eff, power = .8, alpha = .05, dropout = 0, type = input$efftype)$N
+      }
+      
+    } else {
+      alpha_RCT_out = 0.05
+      if (input$fix == 'ss') {
+        power_RCT_out = power_freqsup(floor(input$max/input$nt), eff, alpha = 0.05, type = input$efftype,
+                                      target = 0)
+        ss_RCT_out = NULL
+      } else {
+        power_RCT_out = 0.8
+        ss_RCT_out = sampsize_freqsup(power = .8, pars = eff, alpha = 0.05, type = input$efftype)
+      }
+    }
     power_alpha0 <- power_alpha_calc()
     p0 = power_alpha0$power_out #power_calc()
     a0 = power_alpha0$alpha_out #alpha_calc()
     if(!is.null(a0)) al0 = a0$alpha else al0 =  NULL
     if(!is.null(a0)) pow0 = p0$power else pow0 =  NULL
     d0 = ifelse(!is.null(p0), mean(p0$Nt * input$ec), NULL)
-    al1 = power_alpha0$alpha_RCT_out
-    pow1 = power_alpha0$power_RCT_out
+    al1 = alpha_RCT_out
+    pow1 = power_RCT_out
     d1 = input$max * input$ec
-    al1
+    #al1
+    ss_RCT_out
     
   })
   
@@ -942,7 +1011,6 @@ shinyServer(function(input, output, session) {
   output$about = renderUI({
     withMathJax(includeHTML('rmd0.html'))
   })
-
 
   addPopover(session, "ssdist", "Sample size", content = paste0("<p>Sample size at time of trial termination for the simulated trials.</p>"), trigger = 'click')
   addPopover(session, "ssdist", "Cost", content = paste0("<p>Cost distribution over the simulated trials.</p>"), trigger = 'click')

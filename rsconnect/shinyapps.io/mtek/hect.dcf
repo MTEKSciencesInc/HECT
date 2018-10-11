@@ -1,12 +1,12 @@
-name: hect
-title:
+name: HECT
+title: HECT
 username:
 account: mtek
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 424914
-bundleId: 1602610
+bundleId: 1635736
 url: https://mtek.shinyapps.io/hect/
-when: 1537809667.14135
+when: 1539212383.78435
 asMultiple: FALSE
 asStatic: FALSE
