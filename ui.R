@@ -12,7 +12,7 @@ names0 <- c('nTreatment', paste('effect', 1:5, sep = ''), 'effectType',
 shinyUI(fluidPage(#theme="bootstrap.css",
 
   # Application title
-  titlePanel(title=div(img(src="MTEK LOGO - v0.4.png", width = 200), "HECT - Highly Efficient Clinical Trial simulator")),
+  titlePanel(title=div(img(src="43186754.png", width = 150), "HECT - Highly Efficient Clinical Trial simulator")),
   # navbarPage('',
   #                  dashboardPage(
   #                    dbHeader,
