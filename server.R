@@ -580,7 +580,16 @@ shinyServer(function(input, output, session) {
             pow0[i] = paste("<font color=\"#FF0000\"><b>",round(p0$power[i], 2), "</b></font>")
       }
       d00 = t(data.frame(power = pow0))
+      if (!is.null(p0$pfut)) {
+        fut0 = c()
+        for (i in 1:length(p0$pfut)) {
+          fut0[i] = paste(round(p0$pfut[i], 2)) 
+        }
+        d02 = t(data.frame(pfut = fut0))
+      }
     }
+    
+    
       
       p00 = power_alpha0$alpha_out #power_calc()
       if (is.null(p00)) {
@@ -604,11 +613,11 @@ shinyServer(function(input, output, session) {
         }
         d01 = t(data.frame(alpha = a0))
       
-      d0 = rbind(d00, d01)
+      if (!is.null(p0$pfut)) d0 = rbind(d00, d01, d02) else d0 = rbind(d00, d01)
       
       if (compCon == T) {
         colnames(d0) = paste('Treatment', 2:input$nt)
-        row.names(d0) = c("<b>Power</b>", "<b>Type I error rate</b>")
+        row.names(d0) = c("<b>Power</b>", "<b>Type I error rate</b>", "<b>Probability of futility</b>")
         datatable(d0, rownames = T, escape = FALSE,
                   #caption = paste('Power to detect the effect of all treatments against the reference treatment:'),
                   options = list(bLengthChange=0,                       # show/hide records per page dropdown
